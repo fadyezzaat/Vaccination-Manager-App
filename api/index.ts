@@ -1,9 +1,9 @@
 import "dotenv/config";
 import express from "express";
 import path from "path";
-import { db, createTables, createInfectionTable } from "../src/lib/db";
+import { db, createTables, createInfectionTable } from "../src/lib/db.js";
 import { parse } from "csv-parse/sync";
-import { syncGoogleSheets } from "../sync";
+import { syncGoogleSheets } from "../sync.js";
 
 export const app = express();
 
