@@ -1128,6 +1128,9 @@ var App = function App() {
               _context0.n = 2;
               return fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(_objectSpread({
                   action: 'saveNeedlestick'
                 }, params))
@@ -1256,6 +1259,9 @@ var App = function App() {
               _context10.n = 2;
               return fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(_objectSpread({
                   action: 'saveEmployee'
                 }, params))
@@ -1337,6 +1343,9 @@ var App = function App() {
               _context11.n = 2;
               return fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
                   action: 'saveMultipleEmployees',
                   employees: employeesArray
@@ -1392,6 +1401,9 @@ var App = function App() {
               _context12.n = 2;
               return fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({
                   action: 'deleteEmployee',
                   nationalId: nationalId

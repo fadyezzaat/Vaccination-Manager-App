@@ -85,18 +85,27 @@ app.all("/api", async (req, res) => {
       res.json({ status: "success", employees: result.rows });
     }
     else if (action === "saveEmployee" || action === "saveEmployeeData") {
-      const { nationalId, name, category, phone, dose1, dose2, dose3, notes } = params;
+      const { nationalId, oldNationalId, name, category, phone, dose1, dose2, dose3, notes } = params;
+      
+      const targetId = oldNationalId || nationalId;
       
       const existing = await db.execute({
         sql: "SELECT * FROM vaccine_employees WHERE nationalId = ?",
-        args: [nationalId]
+        args: [targetId]
       });
 
       if (existing.rows.length > 0) {
         await db.execute({
-          sql: "UPDATE vaccine_employees SET name=?, category=?, phone=?, dose1=?, dose2=?, dose3=?, notes=? WHERE nationalId=?",
-          args: [name || "", category || "", phone || "", dose1 || "", dose2 || "", dose3 || "", notes || "", nationalId]
+          sql: "UPDATE vaccine_employees SET nationalId=?, name=?, category=?, phone=?, dose1=?, dose2=?, dose3=?, notes=? WHERE nationalId=?",
+          args: [nationalId, name || "", category || "", phone || "", dose1 || "", dose2 || "", dose3 || "", notes || "", targetId]
         });
+        
+        if (nationalId !== targetId) {
+          await db.execute({
+            sql: "UPDATE vaccine_needlesticks SET nationalId=? WHERE nationalId=?",
+            args: [nationalId, targetId]
+          });
+        }
       } else {
         await db.execute({
           sql: "INSERT INTO vaccine_employees (nationalId, name, category, phone, dose1, dose2, dose3, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
