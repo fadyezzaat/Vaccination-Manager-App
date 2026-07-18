@@ -174,8 +174,11 @@ app.all("/api", async (req, res) => {
         return;
       }
       
-      // Clear existing first
-      await db.execute("DELETE FROM vaccine_employees");
+      const mode = params.mode || "replace";
+      if (mode === "replace") {
+        // Clear existing first
+        await db.execute("DELETE FROM vaccine_employees");
+      }
       
       // Deduplicate by nationalId, keeping the last occurrence
       const dedupedMap = new Map<string, any>();
@@ -212,8 +215,11 @@ app.all("/api", async (req, res) => {
         return;
       }
       
-      // Clear existing first
-      await db.execute("DELETE FROM vaccine_needlesticks");
+      const mode = params.mode || "replace";
+      if (mode === "replace") {
+        // Clear existing first
+        await db.execute("DELETE FROM vaccine_needlesticks");
+      }
       
       let insertedCount = 0;
       for (const ns of needlesticksArray) {

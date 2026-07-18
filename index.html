@@ -1747,21 +1747,33 @@ var SyncSettings = function SyncSettings() {
     }
     
     Swal.fire({
-      title: 'هل أنت متأكد؟',
-      text: 'سيتم حذف جميع الموظفين الحاليين واستبدالهم بـ ' + parsedEmployees.length + ' موظف جديد.',
-      icon: 'warning',
+      title: 'اختر طريقة حفظ الموظفين',
+      html: '<div class="text-right text-sm text-slate-600 mb-2 leading-relaxed font-semibold">يرجى تحديد طريقة الحفظ المناسبة لـ (' + parsedEmployees.length + ') موظف:</div>',
+      icon: 'question',
+      input: 'radio',
+      inputOptions: {
+        'merge': 'الإضافة والدمج مع القائمة الحالية (تحديث بيانات الموظفين الحاليين وإضافة الجدد)',
+        'replace': 'حذف جميع الموظفين الحاليين واستبدالهم بالقائمة الجديدة بالكامل'
+      },
+      inputValue: 'merge',
       showCancelButton: true,
       confirmButtonColor: '#059669',
       cancelButtonColor: '#dc2626',
       confirmButtonText: 'نعم، استورد الآن',
-      cancelButtonText: 'إلغاء'
+      cancelButtonText: 'إلغاء',
+      inputValidator: function(value) {
+        if (!value) {
+          return 'يجب اختيار أحد الخيارين للمتابعة!';
+        }
+      }
     }).then(function(result) {
       if (result.isConfirmed) {
+        const mode = result.value;
         setIsSaving(true);
         fetch('/api?action=importEmployees', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ employees: parsedEmployees })
+          body: JSON.stringify({ employees: parsedEmployees, mode: mode })
         })
         .then(res => res.json())
         .then(data => {
@@ -1795,21 +1807,33 @@ var SyncSettings = function SyncSettings() {
     }
     
     Swal.fire({
-      title: 'هل أنت متأكد؟',
-      text: 'سيتم حذف جميع سجلات حوادث الوخز الحالية واستبدالها بـ ' + parsedNeedlesticks.length + ' سجل جديد.',
-      icon: 'warning',
+      title: 'اختر طريقة حفظ حوادث الوخز',
+      html: '<div class="text-right text-sm text-slate-600 mb-2 leading-relaxed font-semibold">يرجى تحديد طريقة الحفظ المناسبة لـ (' + parsedNeedlesticks.length + ') سجل وخز:</div>',
+      icon: 'question',
+      input: 'radio',
+      inputOptions: {
+        'merge': 'الإضافة والدمج مع السجلات الحالية دون حذف القديم',
+        'replace': 'حذف جميع سجلات حوادث الوخز الحالية واستبدالها بالقائمة الجديدة بالكامل'
+      },
+      inputValue: 'merge',
       showCancelButton: true,
       confirmButtonColor: '#059669',
       cancelButtonColor: '#dc2626',
       confirmButtonText: 'نعم، استورد الآن',
-      cancelButtonText: 'إلغاء'
+      cancelButtonText: 'إلغاء',
+      inputValidator: function(value) {
+        if (!value) {
+          return 'يجب اختيار أحد الخيارين للمتابعة!';
+        }
+      }
     }).then(function(result) {
       if (result.isConfirmed) {
+        const mode = result.value;
         setIsSaving(true);
         fetch('/api?action=importNeedlesticks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ needlesticks: parsedNeedlesticks })
+          body: JSON.stringify({ needlesticks: parsedNeedlesticks, mode: mode })
         })
         .then(res => res.json())
         .then(data => {
