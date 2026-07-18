@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>سجل التطعيمات والوخز</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel -->
+    
+
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; overflow-x: hidden; }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 1rem); }
+        .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @media print {
+            @page { size: landscape; margin: 8mm; }
+            .no-print, aside, nav, header, footer { display: none !important; }
+            body { background-color: white !important; font-size: 9pt !important; line-height: 1.1 !important; color: black !important; }
+            .print-only { display: block !important; }
+            #root, main, .bg-white, .rounded-3xl, .overflow-hidden { background: transparent !important; box-shadow: none !important; border: none !important; margin: 0 auto !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; overflow: visible !important; }
+            .overflow-x-auto { overflow: visible !important; width: 100% !important; }
+            .space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem !important; }
+            .pb-8 { padding-bottom: 0 !important; }
+            table { width: 96% !important; max-width: 96% !important; border-collapse: collapse !important; margin: 0 auto !important; table-layout: fixed !important; page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            th, td { border: 1pt solid #000 !important; padding: 4px 2px !important; text-align: center !important; white-space: normal !important; word-wrap: break-word !important; font-size: 8pt !important; line-height: 1.2 !important; }
+            th { background-color: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 9pt !important; }
+            th:nth-child(1), td:nth-child(1) { width: 18% !important; font-size: 8.5pt !important; }
+            th:nth-child(2), td:nth-child(2) { width: 12% !important; }
+            th:nth-child(3), td:nth-child(3) { width: 10% !important; }
+            th:nth-child(4), td:nth-child(4), th:nth-child(5), td:nth-child(5), th:nth-child(6), td:nth-child(6) { width: 10% !important; font-size: 7.5pt !important; white-space: nowrap !important; }
+            th:nth-child(7), td:nth-child(7) { width: 30% !important; white-space: pre-wrap !important; word-break: break-word !important; text-align: right !important; }
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div id="root"></div>
+
+    <script>
+"use strict";
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == _typeof(e) || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
+function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+var _React = React,
+  useState = _React.useState,
+  useEffect = _React.useEffect,
+  useMemo = _React.useMemo;
+
+// رابط Google Apps Script الخاص بك
+var GOOGLE_SCRIPT_URL = '/api';
+
+// ==========================================
+// مكون تخطيط الصفحة (Layout Component)
+// ==========================================
+var Layout = function Layout(_ref) {
+  var currentTab = _ref.currentTab,
+    setCurrentTab = _ref.setCurrentTab,
+    children = _ref.children;
+  var navItems = [{
+    id: 'vaccinations',
+    icon: 'fa-syringe',
+    label: 'التطعيمات'
+  }, {
+    id: 'injuries',
+    icon: 'fa-triangle-exclamation',
+    label: 'استمارة الوخز'
+  }, {
+    id: 'sync_settings',
+    icon: 'fa-rotate',
+    label: 'المزامنة والإعدادات'
+  }];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "min-h-screen bg-slate-50 flex flex-col md:flex-row"
+  }, /*#__PURE__*/React.createElement("aside", {
+    className: "hidden md:flex flex-col w-64 bg-white border-l border-slate-200 shadow-sm h-screen sticky top-0 flex-shrink-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-6 flex items-center gap-3 border-b border-slate-100"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-emerald-100 p-2.5 rounded-xl text-emerald-600"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-shield-virus text-2xl"
+  })), /*#__PURE__*/React.createElement("h1", {
+    className: "font-bold text-lg text-slate-800"
+  }, "\u0645\u0643\u0627\u0641\u062D\u0629 \u0627\u0644\u0639\u062F\u0648\u0649")), /*#__PURE__*/React.createElement("nav", {
+    className: "p-4 space-y-2 flex-1"
+  }, navItems.map(function (item) {
+    return /*#__PURE__*/React.createElement("button", {
+      key: item.id,
+      onClick: function onClick() {
+        return setCurrentTab(item.id);
+      },
+      className: "w-full flex items-center gap-3 p-3.5 rounded-xl transition-all text-right font-bold ".concat(currentTab === item.id ? 'bg-emerald-50 text-emerald-700 shadow-sm border border-emerald-100' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent')
+    }, /*#__PURE__*/React.createElement("i", {
+      className: "fas ".concat(item.icon, " w-5 text-center text-lg")
+    }), item.label);
+  }))), /*#__PURE__*/React.createElement("header", {
+    className: "md:hidden bg-white border-b border-slate-200 p-4 sticky top-0 z-10 flex items-center gap-3 shadow-sm"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-emerald-100 p-2 rounded-lg text-emerald-600"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-shield-virus text-xl"
+  })), /*#__PURE__*/React.createElement("h1", {
+    className: "font-bold text-lg text-slate-800"
+  }, "\u0646\u0638\u0627\u0645 \u0645\u0643\u0627\u0641\u062D\u0629 \u0627\u0644\u0639\u062F\u0648\u0649")), /*#__PURE__*/React.createElement("main", {
+    className: "flex-1 p-4 pb-24 md:p-8 overflow-y-auto w-full flex flex-col min-h-screen"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "max-w-5xl mx-auto w-full flex-1"
+  }, children), /*#__PURE__*/React.createElement("footer", {
+    className: "mt-12 text-center text-sm font-semibold text-slate-400 pb-4",
+    dir: "ltr"
+  }, "\xA9 2026 Dr. Fady Ezzat. All Rights Reserved")), /*#__PURE__*/React.createElement("nav", {
+    className: "md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center p-2 pb-safe z-50 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)]"
+  }, navItems.map(function (item) {
+    return /*#__PURE__*/React.createElement("button", {
+      key: item.id,
+      onClick: function onClick() {
+        return setCurrentTab(item.id);
+      },
+      className: "flex flex-col items-center justify-center gap-1 p-2 w-full transition-colors rounded-xl ".concat(currentTab === item.id ? 'text-emerald-600 bg-emerald-50' : 'text-slate-400 hover:text-slate-700')
+    }, /*#__PURE__*/React.createElement("i", {
+      className: "fas ".concat(item.icon, " text-xl mb-0.5")
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "text-[11px] font-bold"
+    }, item.label));
+  })));
+};
+
+// ==========================================
+// مكون التطعيمات (Vaccinations Component) - التصميم الجديد
+// ==========================================
+var Vaccinations = function Vaccinations(_ref2) {
+  var api = _ref2.api;
+  var _useState = useState([]),
+    _useState2 = _slicedToArray(_useState, 2),
+    employees = _useState2[0],
+    setEmployees = _useState2[1];
+  var _useState3 = useState([]),
+    _useState4 = _slicedToArray(_useState3, 2),
+    filteredEmployees = _useState4[0],
+    setFilteredEmployees = _useState4[1];
+  var _useState5 = useState([]),
+    _useState6 = _slicedToArray(_useState5, 2),
+    categories = _useState6[0],
+    setCategories = _useState6[1];
+  var _useState7 = useState(''),
+    _useState8 = _slicedToArray(_useState7, 2),
+    selectedCategory = _useState8[0],
+    setSelectedCategory = _useState8[1];
+  var _useState9 = useState(''),
+    _useState0 = _slicedToArray(_useState9, 2),
+    selectedDoseStatus = _useState0[0],
+    setSelectedDoseStatus = _useState0[1];
+  var _useState1 = useState(''),
+    _useState10 = _slicedToArray(_useState1, 2),
+    searchName = _useState10[0],
+    setSearchName = _useState10[1];
+  useEffect(function () {
+    loadEmployeesData();
+  }, []);
+  var loadEmployeesData = /*#__PURE__*/function () {
+    var _ref3 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
+      var data, uniqueCategories;
+      return _regenerator().w(function (_context) {
+        while (1) switch (_context.n) {
+          case 0:
+            _context.n = 1;
+            return api.loadEmployees();
+          case 1:
+            data = _context.v;
+            if (data) {
+              setEmployees(data);
+              setFilteredEmployees(data);
+              uniqueCategories = _toConsumableArray(new Set(data.map(function (emp) {
+                return emp.category;
+              }).filter(Boolean)));
+              setCategories(uniqueCategories);
+            }
+          case 2:
+            return _context.a(2);
+        }
+      }, _callee);
+    }));
+    return function loadEmployeesData() {
+      return _ref3.apply(this, arguments);
+    };
+  }();
+  useEffect(function () {
+    var result = employees;
+    if (selectedCategory) {
+      result = result.filter(function (emp) {
+        return emp.category === selectedCategory;
+      });
+    }
+    if (searchName) {
+      result = result.filter(function (emp) {
+        return emp.name && emp.name.includes(searchName) || emp.nationalId && emp.nationalId.includes(searchName);
+      });
+    }
+    if (selectedDoseStatus) {
+      if (selectedDoseStatus === 'completed') {
+        result = result.filter(function (emp) {
+          return emp.dose1 && emp.dose2 && emp.dose3;
+        });
+      } else if (selectedDoseStatus === 'incomplete') {
+        result = result.filter(function (emp) {
+          return (emp.dose1 || emp.dose2 || emp.dose3) && !(emp.dose1 && emp.dose2 && emp.dose3);
+        });
+      } else if (selectedDoseStatus === 'none') {
+        result = result.filter(function (emp) {
+          return !emp.dose1 && !emp.dose2 && !emp.dose3 && !(emp.notes && (emp.notes.includes('تلقى جميع الجرعات خارج المستشفى') || emp.notes.includes('رافض للتطعيم وتم عمل اقرار بالرفض')));
+        });
+      } else if (selectedDoseStatus === 'outside') {
+        result = result.filter(function (emp) {
+          return emp.notes && emp.notes.includes('تلقى جميع الجرعات خارج المستشفى');
+        });
+      } else if (selectedDoseStatus === 'refused') {
+        result = result.filter(function (emp) {
+          return emp.notes && emp.notes.includes('رافض للتطعيم وتم عمل اقرار بالرفض');
+        });
+      } else if (selectedDoseStatus === 'dose1') {
+        result = result.filter(function (emp) {
+          return emp.dose1 && !emp.dose2 && !emp.dose3;
+        });
+      } else if (selectedDoseStatus === 'dose2') {
+        result = result.filter(function (emp) {
+          return emp.dose2 && !emp.dose3;
+        });
+      } else if (selectedDoseStatus === 'dose3') {
+        result = result.filter(function (emp) {
+          return emp.dose3;
+        });
+      }
+    }
+    setFilteredEmployees(result);
+  }, [selectedCategory, searchName, selectedDoseStatus, employees]);
+  var groupedEmployees = useMemo(function () {
+    var groups = {};
+    filteredEmployees.forEach(function (emp) {
+      var cat = emp.category || 'غير محدد';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(emp);
+    });
+    return groups;
+  }, [filteredEmployees]);
+
+  // دالة مساعدة لتنسيق شكل الجرعة كشارة (Badge)
+  var renderDoseBadge = function renderDoseBadge(dose) {
+    if (!dose || dose.toString().trim() === '') return /*#__PURE__*/React.createElement("span", {
+      className: "text-slate-300 font-bold"
+    }, "-");
+    var displayDose = dose.toString();
+    if (displayDose.includes('T')) {
+      displayDose = displayDose.split('T')[0];
+    }
+    var parts = displayDose.split('-');
+    if (parts.length === 3) {
+      displayDose = "".concat(parts[2], "/").concat(parts[1], "/").concat(parts[0]);
+    }
+    return /*#__PURE__*/React.createElement("span", {
+      className: "inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-bold text-xs border border-emerald-100 print:bg-transparent print:border-none print:px-0 print:py-0 print:text-black"
+    }, /*#__PURE__*/React.createElement("i", {
+      className: "fas fa-check-circle print:hidden"
+    }), " ", displayDose);
+  };
+
+  // دالة إضافة موظف جديد
+  var handleAddNewWorker = /*#__PURE__*/function () {
+    var _ref4 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
+      var datalistOptions, _yield$Swal$fire, formValues, success;
+      return _regenerator().w(function (_context2) {
+        while (1) switch (_context2.n) {
+          case 0:
+            datalistOptions = categories.map(function (c) {
+              return "<option value=\"".concat(c, "\">");
+            }).join('');
+            _context2.n = 1;
+            return Swal.fire({
+              title: 'إضافة موظف جديد',
+              html: "\n                        <div class=\"text-right px-2\" dir=\"rtl\">\n                            <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0627\u0644\u0641\u0626\u0629 *</label>\n                            <input id=\"swal-cat\" list=\"category-list\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-semibold\" placeholder=\"\u0627\u062E\u062A\u0631 \u0645\u0646 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0623\u0648 \u0627\u0643\u062A\u0628 \u0641\u0626\u0629 \u062C\u062F\u064A\u062F\u0629...\" required>\n                            <datalist id=\"category-list\">\n                                ".concat(datalistOptions, "\n                            </datalist>\n                            \n                            <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0627\u0644\u0627\u0633\u0645 \u0631\u0628\u0627\u0639\u064A *</label>\n                            <input id=\"swal-name\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-semibold\" required>\n\n                            <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0631\u0642\u0645 \u0627\u0644\u0628\u0637\u0627\u0642\u0629 (14 \u0631\u0642\u0645) *</label>\n                            <input id=\"swal-id\" type=\"text\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-semibold\" required minlength=\"14\" maxlength=\"14\">\n\n                            <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0631\u0642\u0645 \u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646</label>\n                            <input id=\"swal-phone\" type=\"text\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-semibold\">\n\n                            <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649</label>\n                            <input id=\"swal-d1\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-semibold\">\n\n                            <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629</label>\n                            <input id=\"swal-d2\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-semibold\">\n\n                            <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629</label>\n                            <input id=\"swal-d3\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-semibold\">\n\n                            <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0645\u0644\u0627\u062D\u0638\u0627\u062A</label>\n                            <input id=\"swal-notes\" list=\"notes-list\" class=\"swal2-input w-full max-w-full m-0 mb-2 text-sm font-semibold\" placeholder=\"\u0625\u0636\u0627\u0641\u0629 \u0645\u0644\u0627\u062D\u0638\u0629...\">\n                            <datalist id=\"notes-list\">\n                                <option value=\"\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649\">\n                                <option value=\"\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636\">\n                            </datalist>\n                            <div class=\"flex flex-col gap-2 mt-2 select-none\">\n                                <button type=\"button\" onclick=\"document.getElementById('swal-notes').value='\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649'\" class=\"text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg text-right font-bold transition-colors border border-slate-200\">\n                                    + \u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649\n                                </button>\n                                <button type=\"button\" onclick=\"document.getElementById('swal-notes').value='\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636'\" class=\"text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg text-right font-bold transition-colors border border-slate-200\">\n                                    + \u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636\n                                </button>\n                            </div>\n                        </div>\n                    "),
+              focusConfirm: false,
+              showCancelButton: true,
+              confirmButtonText: 'حفظ الموظف',
+              cancelButtonText: 'إلغاء',
+              confirmButtonColor: '#1e293b',
+              // slate-800
+              preConfirm: function preConfirm() {
+                var getIsoDose = function getIsoDose(id) {
+                  var val = document.getElementById(id).value.trim();
+                  if (!val) return '';
+                  if (val === 'تم') return val;
+                  try {
+                    var d = new Date(val);
+                    if (!isNaN(d.getTime())) {
+                      var y = d.getFullYear();
+                      var m = String(d.getMonth() + 1).padStart(2, '0');
+                      var day = String(d.getDate()).padStart(2, '0');
+                      return "".concat(day, "/").concat(m, "/").concat(y);
+                    }
+                  } catch (e) {}
+                  return val;
+                };
+                var category = document.getElementById('swal-cat').value.trim();
+                var name = document.getElementById('swal-name').value.trim();
+                var id = document.getElementById('swal-id').value.trim();
+                var phone = document.getElementById('swal-phone').value.trim();
+                var dose1 = getIsoDose('swal-d1');
+                var dose2 = getIsoDose('swal-d2');
+                var dose3 = getIsoDose('swal-d3');
+                var notes = document.getElementById('swal-notes').value.trim();
+                if (!category || !name || !id) {
+                  Swal.showValidationMessage('يرجى إدخال جميع الحقول الإجبارية (الفئة، الاسم، رقم البطاقة)');
+                  return false;
+                }
+                if (id.length !== 14 || isNaN(id)) {
+                  Swal.showValidationMessage('رقم البطاقة يجب أن يتكون من 14 رقم صحيح');
+                  return false;
+                }
+                return {
+                  category: category,
+                  name: name,
+                  nationalId: id,
+                  phone: phone,
+                  dose1: dose1,
+                  dose2: dose2,
+                  dose3: dose3,
+                  notes: notes
+                };
+              }
+            });
+          case 1:
+            _yield$Swal$fire = _context2.v;
+            formValues = _yield$Swal$fire.value;
+            if (!formValues) {
+              _context2.n = 3;
+              break;
+            }
+            _context2.n = 2;
+            return api.saveEmployee(formValues);
+          case 2:
+            success = _context2.v;
+            if (success) {
+              loadEmployeesData();
+            }
+          case 3:
+            return _context2.a(2);
+        }
+      }, _callee2);
+    }));
+    return function handleAddNewWorker() {
+      return _ref4.apply(this, arguments);
+    };
+  }();
+  return /*#__PURE__*/React.createElement("div", {
+    className: "space-y-6 animate-fadeIn"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-6 border-b border-slate-100 bg-slate-50/50"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "hidden print:flex flex-col items-center justify-center w-full text-center mb-2 font-bold text-[11px] leading-tight pb-2 border-b border-black"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mb-0.5"
+  }, "\u0645\u0633\u062A\u0634\u0641\u0649 \u0627\u0644\u0645\u0646\u064A\u0627 \u0627\u0644\u062C\u0627\u0645\u0639\u0649 \u0644\u0644\u0639\u064A\u0648\u0646"), /*#__PURE__*/React.createElement("span", {
+    className: "mb-0.5"
+  }, "\u0648\u062D\u062F\u0629 \u0645\u0643\u0627\u0641\u062D\u0629 \u0627\u0644\u0639\u062F\u0648\u0649"), /*#__PURE__*/React.createElement("span", null, "\u0643\u0634\u0641 \u062A\u0637\u0639\u064A\u0645\u0627\u062A \u0641\u064A\u0631\u0648\u0633 \u0628\u0649")), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 no-print"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-xl font-bold text-slate-800 flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-emerald-100 p-2 rounded-lg text-emerald-600"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-syringe"
+  })), "\u0643\u0634\u0641 \u0627\u0644\u062A\u0637\u0639\u064A\u0645\u0627\u062A"), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap gap-2 w-full md:w-auto no-print"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: handleAddNewWorker,
+    className: "flex-1 md:flex-none text-white bg-slate-800 hover:bg-slate-900 px-5 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-sm"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-user-plus"
+  }), " \u0625\u0636\u0627\u0641\u0629 \u0645\u0648\u0638\u0641"), /*#__PURE__*/React.createElement("button", {
+    onClick: function onClick() {
+      return window.print();
+    },
+    className: "flex-1 md:flex-none text-rose-600 bg-rose-50 border border-rose-100 hover:bg-rose-100 hover:text-rose-700 px-5 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-sm"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-file-pdf"
+  }), " \u062D\u0641\u0638 PDF"))), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 md:grid-cols-3 gap-4 no-print"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "relative"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: searchName,
+    onChange: function onChange(e) {
+      return setSearchName(e.target.value);
+    },
+    placeholder: "\u0628\u062D\u062B \u0628\u0627\u0644\u0627\u0633\u0645 \u0623\u0648 \u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0642\u0648\u0645\u064A...",
+    className: "w-full py-3.5 pr-11 pl-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-semibold transition-all bg-white shadow-sm"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "relative"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-filter absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500"
+  }), /*#__PURE__*/React.createElement("select", {
+    value: selectedCategory,
+    onChange: function onChange(e) {
+      return setSelectedCategory(e.target.value);
+    },
+    className: "w-full py-3.5 pr-11 pl-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-bold text-slate-700 appearance-none bg-white shadow-sm cursor-pointer"
+  }, /*#__PURE__*/React.createElement("option", {
+    value: ""
+  }, "\u062C\u0645\u064A\u0639 \u0627\u0644\u0641\u0626\u0627\u062A"), categories.map(function (cat) {
+    return /*#__PURE__*/React.createElement("option", {
+      key: cat,
+      value: cat
+    }, cat);
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "relative"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-shield-virus absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500"
+  }), /*#__PURE__*/React.createElement("select", {
+    value: selectedDoseStatus,
+    onChange: function onChange(e) {
+      return setSelectedDoseStatus(e.target.value);
+    },
+    className: "w-full py-3.5 pr-11 pl-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-bold text-slate-700 appearance-none bg-white shadow-sm cursor-pointer"
+  }, /*#__PURE__*/React.createElement("option", {
+    value: ""
+  }, "\u062D\u0627\u0644\u0629 \u0627\u0644\u062A\u0637\u0639\u064A\u0645 (\u0627\u0644\u0643\u0644)"), /*#__PURE__*/React.createElement("option", {
+    value: "completed"
+  }, "\u0645\u0643\u062A\u0645\u0644 \u0627\u0644\u062A\u0637\u0639\u064A\u0645 (3 \u062C\u0631\u0639\u0627\u062A)"), /*#__PURE__*/React.createElement("option", {
+    value: "incomplete"
+  }, "\u062A\u0637\u0639\u064A\u0645 \u063A\u064A\u0631 \u0645\u0643\u062A\u0645\u0644"), /*#__PURE__*/React.createElement("option", {
+    value: "none"
+  }, "\u0644\u0645 \u064A\u062A\u0644\u0642 \u0623\u064A \u062C\u0631\u0639\u0629"), /*#__PURE__*/React.createElement("option", {
+    value: "dose1"
+  }, "\u062A\u0644\u0642\u0649 \u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0627\u0648\u0644\u0649"), /*#__PURE__*/React.createElement("option", {
+    value: "dose2"
+  }, "\u062A\u0644\u0642\u0649 \u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629"), /*#__PURE__*/React.createElement("option", {
+    value: "dose3"
+  }, "\u062A\u0644\u0642\u0649 \u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629"), /*#__PURE__*/React.createElement("option", {
+    value: "outside"
+  }, "\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649"), /*#__PURE__*/React.createElement("option", {
+    value: "refused"
+  }, "\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636"))))), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-8 pb-8"
+  }, Object.keys(groupedEmployees).length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "p-12 text-center bg-white"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col items-center justify-center text-slate-400"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-folder-open text-4xl mb-3 opacity-50"
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "font-bold text-lg"
+  }, "\u0644\u0627 \u062A\u0648\u062C\u062F \u0628\u064A\u0627\u0646\u0627\u062A \u0645\u0637\u0627\u0628\u0642\u0629 \u0644\u0644\u0628\u062D\u062B"))) : Object.entries(groupedEmployees).map(function (_ref5) {
+    var _ref6 = _slicedToArray(_ref5, 2),
+      cat = _ref6[0],
+      emps = _ref6[1];
+    return /*#__PURE__*/React.createElement("div", {
+      key: cat,
+      className: "overflow-x-auto print:overflow-visible print:w-full print:text-center"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "bg-slate-100 p-4 border-b border-slate-200 print:bg-white print:border-b print:border-slate-800 print:mb-2 print:p-1 print:pb-1 text-center"
+    }, /*#__PURE__*/React.createElement("h3", {
+      className: "text-xl font-bold text-slate-800 print:text-black print:text-base"
+    }, cat, " ", selectedCategory ? '' : "(".concat(emps.length, ")"))), /*#__PURE__*/React.createElement("table", {
+      className: "w-full mx-auto text-right border-collapse whitespace-nowrap"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
+      className: "bg-white border-b border-slate-200"
+    }, /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm"
+    }, "\u0627\u0644\u0627\u0633\u0645"), /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm"
+    }, "\u0631\u0642\u0645 \u0627\u0644\u0628\u0637\u0627\u0642\u0629"), /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm"
+    }, "\u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646"), /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm"
+    }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649"), /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm"
+    }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629"), /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm"
+    }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629"), /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm"
+    }, "\u0645\u0644\u0627\u062D\u0638\u0627\u062A"), /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm text-center no-print"
+    }, "\u0625\u062C\u0631\u0627\u0621"))), /*#__PURE__*/React.createElement("tbody", null, emps.map(function (emp, idx) {
+      return /*#__PURE__*/React.createElement("tr", {
+        key: emp.nationalId + idx,
+        className: "border-b border-slate-100 hover:bg-slate-50 transition-colors group"
+      }, /*#__PURE__*/React.createElement("td", {
+        className: "p-5 font-bold text-slate-800 text-sm"
+      }, emp.name), /*#__PURE__*/React.createElement("td", {
+        className: "p-5 text-slate-600 font-semibold text-sm"
+      }, emp.nationalId), /*#__PURE__*/React.createElement("td", {
+        className: "p-5 text-slate-500 font-medium text-sm",
+        dir: "ltr"
+      }, emp.phone || '-'), /*#__PURE__*/React.createElement("td", {
+        className: "p-5"
+      }, renderDoseBadge(emp.dose1)), /*#__PURE__*/React.createElement("td", {
+        className: "p-5"
+      }, renderDoseBadge(emp.dose2)), /*#__PURE__*/React.createElement("td", {
+        className: "p-5"
+      }, renderDoseBadge(emp.dose3)), /*#__PURE__*/React.createElement("td", {
+        className: "p-5 text-slate-500 text-sm max-w-[150px] truncate print:whitespace-pre-wrap print:overflow-visible print:w-auto print:max-w-none break-words",
+        title: emp.notes
+      }, emp.notes || '-'), /*#__PURE__*/React.createElement("td", {
+        className: "p-5 text-center no-print"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "flex items-center justify-center gap-2"
+      }, /*#__PURE__*/React.createElement("button", {
+        onClick: /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
+          var _yield$Swal$fire2, formValues, success;
+          return _regenerator().w(function (_context3) {
+            while (1) switch (_context3.n) {
+              case 0:
+                _context3.n = 1;
+                return Swal.fire({
+                  title: "\u0625\u0636\u0627\u0641\u0629 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062A\u0637\u0639\u064A\u0645",
+                  html: "<div class=\"text-right px-2\" dir=\"rtl\">\n                                                                    <div class=\"mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200\">\n                                                                        <span class=\"text-xs text-slate-500 font-bold block mb-1\">\u0627\u0644\u0627\u0633\u0645</span>\n                                                                        <span class=\"font-bold text-slate-800\">".concat(emp.name, "</span>\n                                                                    </div>\n                                                                    <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0631\u0642\u0645 \u0627\u0644\u0628\u0637\u0627\u0642\u0629 (14 \u0631\u0642\u0645)</label>\n                                                                    <input id=\"swal-id-edit\" type=\"text\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"").concat(emp.nationalId || '', "\" maxlength=\"14\" minlength=\"14\">\n                                                                    \n                                                                    <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0631\u0642\u0645 \u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646</label>\n                                                                    <input id=\"swal-phone-edit\" type=\"text\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"").concat(emp.phone || '', "\">\n                                                                    \n                                                                    <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649</label>\n                                                                    <input id=\"swal-d1\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"").concat(emp.dose1 ? emp.dose1.includes('T') ? emp.dose1.split('T')[0] : emp.dose1.includes('/') ? emp.dose1.split('/').reverse().join('-') : emp.dose1 : '', "\">\n                                                                    \n                                                                    <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629</label>\n                                                                    <input id=\"swal-d2\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"").concat(emp.dose2 ? emp.dose2.includes('T') ? emp.dose2.split('T')[0] : emp.dose2.includes('/') ? emp.dose2.split('/').reverse().join('-') : emp.dose2 : '', "\">\n                                                                    \n                                                                    <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629</label>\n                                                                    <input id=\"swal-d3\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"").concat(emp.dose3 ? emp.dose3.includes('T') ? emp.dose3.split('T')[0] : emp.dose3.includes('/') ? emp.dose3.split('/').reverse().join('-') : emp.dose3 : '', "\">\n                                                                    \n                                                                    <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0645\u0644\u0627\u062D\u0638\u0627\u062A</label>\n                                                                    <input id=\"swal-notes\" list=\"notes-list-edit\" class=\"swal2-input w-full max-w-full m-0 text-sm font-bold\" value=\"").concat(emp.notes || '', "\" placeholder=\"\u0625\u0636\u0627\u0641\u0629 \u0645\u0644\u0627\u062D\u0638\u0629...\">\n                                                                    <datalist id=\"notes-list-edit\">\n                                                                        <option value=\"\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649\">\n                                                                        <option value=\"\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636\">\n                                                                    </datalist>\n                                                                    <div class=\"flex flex-col gap-2 mt-3 select-none\">\n                                                                        <button type=\"button\" onclick=\"document.getElementById('swal-notes').value='\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649'\" class=\"text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg text-right font-bold transition-colors border border-slate-200\">\n                                                                            + \u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649\n                                                                        </button>\n                                                                        <button type=\"button\" onclick=\"document.getElementById('swal-notes').value='\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636'\" class=\"text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg text-right font-bold transition-colors border border-slate-200\">\n                                                                            + \u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636\n                                                                        </button>\n                                                                    </div>\n                                                                </div>"),
+                  focusConfirm: false,
+                  showCancelButton: true,
+                  confirmButtonText: 'حفظ الإضافة',
+                  cancelButtonText: 'إلغاء',
+                  confirmButtonColor: '#10b981',
+                  preConfirm: function preConfirm() {
+                    var getIsoDose = function getIsoDose(id) {
+                      var val = document.getElementById(id).value.trim();
+                      if (!val) return '';
+                      if (val === 'تم') return val;
+                      try {
+                        var d = new Date(val);
+                        if (!isNaN(d.getTime())) {
+                          var y = d.getFullYear();
+                          var m = String(d.getMonth() + 1).padStart(2, '0');
+                          var day = String(d.getDate()).padStart(2, '0');
+                          return "".concat(day, "/").concat(m, "/").concat(y);
+                        }
+                      } catch (e) {}
+                      return val;
+                    };
+                    var idEdit = document.getElementById('swal-id-edit').value.trim();
+                    if (idEdit && (idEdit.length !== 14 || isNaN(idEdit))) {
+                      Swal.showValidationMessage('رقم البطاقة يجب أن يتكون من 14 رقم صحيح');
+                      return false;
+                    }
+                    return {
+                      nationalIdEdit: idEdit,
+                      phoneEdit: document.getElementById('swal-phone-edit').value.trim(),
+                      dose1: getIsoDose('swal-d1'),
+                      dose2: getIsoDose('swal-d2'),
+                      dose3: getIsoDose('swal-d3'),
+                      notes: document.getElementById('swal-notes').value
+                    };
+                  }
+                });
+              case 1:
+                _yield$Swal$fire2 = _context3.v;
+                formValues = _yield$Swal$fire2.value;
+                if (!formValues) {
+                  _context3.n = 3;
+                  break;
+                }
+                _context3.n = 2;
+                return api.saveEmployee({
+                  category: emp.category,
+                  name: emp.name,
+                  nationalId: formValues.nationalIdEdit || emp.nationalId,
+                  oldNationalId: emp.nationalId,
+                  phone: formValues.phoneEdit,
+                  dose1: formValues.dose1,
+                  dose2: formValues.dose2,
+                  dose3: formValues.dose3,
+                  notes: formValues.notes
+                });
+              case 2:
+                success = _context3.v;
+                if (success) {
+                  loadEmployeesData();
+                }
+              case 3:
+                return _context3.a(2);
+            }
+          }, _callee3);
+        })),
+        className: "text-emerald-600 border border-emerald-200 bg-emerald-50 hover:bg-emerald-600 hover:text-white px-3 py-1.5 rounded-xl font-bold text-sm transition-all focus:outline-none shadow-sm flex items-center justify-center gap-1.5"
+      }, /*#__PURE__*/React.createElement("i", {
+        className: "fas fa-edit"
+      }), " \u0625\u0636\u0627\u0641\u0629"), /*#__PURE__*/React.createElement("button", {
+        onClick: /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
+          var confirm, success;
+          return _regenerator().w(function (_context4) {
+            while (1) switch (_context4.n) {
+              case 0:
+                _context4.n = 1;
+                return Swal.fire({
+                  title: 'هل أنت متأكد؟',
+                  text: "\u0647\u0644 \u062A\u0631\u064A\u062F \u0628\u0627\u0644\u0641\u0639\u0644 \u062D\u0630\u0641 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0645\u0648\u0638\u0641 ".concat(emp.name, "\u061F"),
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonColor: '#ef4444',
+                  cancelButtonColor: '#cbd5e1',
+                  confirmButtonText: 'نعم، احذف',
+                  cancelButtonText: 'إلغاء'
+                });
+              case 1:
+                confirm = _context4.v;
+                if (!confirm.isConfirmed) {
+                  _context4.n = 3;
+                  break;
+                }
+                _context4.n = 2;
+                return api.deleteEmployee(emp.nationalId);
+              case 2:
+                success = _context4.v;
+                if (success) {
+                  loadEmployeesData();
+                }
+              case 3:
+                return _context4.a(2);
+            }
+          }, _callee4);
+        })),
+        className: "text-rose-600 border border-rose-200 bg-rose-50 hover:bg-rose-600 hover:text-white px-3 py-1.5 rounded-xl font-bold text-sm transition-all focus:outline-none shadow-sm flex items-center justify-center gap-1.5"
+      }, /*#__PURE__*/React.createElement("i", {
+        className: "fas fa-trash-alt"
+      }), " \u062D\u0630\u0641"))));
+    }))));
+  }), Object.keys(groupedEmployees).length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "hidden print:flex w-full justify-between items-center mt-12 pt-4 px-12 text-black",
+    style: {
+      pageBreakInside: 'avoid'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "font-bold text-base text-right w-1/3"
+  }, "\u0627\u0644\u0642\u0627\u0626\u0645 \u0628\u0627\u0644\u062A\u0637\u0639\u064A\u0645"), /*#__PURE__*/React.createElement("div", {
+    className: "font-bold text-base text-center w-1/3"
+  }, "\u0645\u0633\u0626\u0648\u0644 \u0645\u0643\u0627\u0641\u062D\u0629 \u0627\u0644\u0639\u062F\u0648\u0649"), /*#__PURE__*/React.createElement("div", {
+    className: "font-bold text-base text-left w-1/3"
+  }, "\u0645\u062F\u064A\u0631 \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649")))));
+};
+
+// ==========================================
+// مكون الوخز (Injuries Component)
+// ==========================================
+const Injuries = ({
+  api
+}) => {
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [isSearching, setIsSearching] = React.useState(false);
+  const [employee, setEmployee] = React.useState(null);
+
+  // Needlestick documents
+  const [formImage, setFormImage] = React.useState(null);
+  const [analysis1Image, setAnalysis1Image] = React.useState(null);
+  const [analysis2Image, setAnalysis2Image] = React.useState(null);
+  const [analysis3Image, setAnalysis3Image] = React.useState(null);
+
+  // Table of injured employees (or everyone searched)
+  const [employeesList, setEmployeesList] = React.useState([]);
+  const [isLoadingList, setIsLoadingList] = React.useState(false);
+  React.useEffect(() => {
+    loadAllEmployees();
+  }, []);
+  const loadAllEmployees = async () => {
+    setIsLoadingList(true);
+    const data = await api.loadEmployees();
+    if (data) {
+      const processed = data.map(emp => {
+        let form = null;
+        let a1 = null;
+        let a2 = null;
+        let a3 = null;
+        if (emp.formImage) {
+          try {
+            const parsed = JSON.parse(emp.formImage);
+            if (Array.isArray(parsed) && parsed.length > 0) form = parsed[0];else form = emp.formImage;
+          } catch (e) {
+            form = emp.formImage;
+          }
+        }
+        if (emp.analysisImages) {
+          try {
+            const p = JSON.parse(emp.analysisImages);
+            if (!Array.isArray(p) && p !== null && typeof p === 'object') {
+              a1 = p.a1 || null;
+              a2 = p.a2 || null;
+              a3 = p.a3 || null;
+            } else if (Array.isArray(p)) {
+              a1 = p[0] || null;
+              a2 = p[1] || null;
+              a3 = p[2] || null;
+            }
+          } catch (e) {}
+        }
+        return {
+          ...emp,
+          form,
+          a1,
+          a2,
+          a3
+        };
+      }).filter(emp => emp.form || emp.a1 || emp.a2 || emp.a3);
+      setEmployeesList(processed);
+    }
+    setIsLoadingList(false);
+  };
+  const handleSearch = async () => {
+    if (searchQuery.trim().length === 14 && !isNaN(searchQuery)) {
+      setIsSearching(true);
+      const emp = await api.fetchEmployee(searchQuery);
+      if (emp) {
+        setEmployee(emp);
+        parseAndSetDocs(emp);
+      } else {
+        setEmployee(null);
+      }
+      setIsSearching(false);
+    } else {
+      Swal.fire('تنبيه', 'يرجى إدخال رقم قومي صحيح (14 رقم)', 'warning');
+    }
+  };
+  const parseAndSetDocs = emp => {
+    let form = null;
+    let a1 = null;
+    let a2 = null;
+    let a3 = null;
+    if (emp.formImage) {
+      try {
+        const parsed = JSON.parse(emp.formImage);
+        if (Array.isArray(parsed) && parsed.length > 0) form = parsed[0];else form = emp.formImage;
+      } catch (e) {
+        form = emp.formImage;
+      }
+    }
+    if (emp.analysisImages) {
+      try {
+        const p = JSON.parse(emp.analysisImages);
+        if (!Array.isArray(p) && p !== null && typeof p === 'object') {
+          a1 = p.a1 || null;
+          a2 = p.a2 || null;
+          a3 = p.a3 || null;
+        } else if (Array.isArray(p)) {
+          a1 = p[0] || null;
+          a2 = p[1] || null;
+          a3 = p[2] || null;
+        }
+      } catch (e) {}
+    }
+    setFormImage(form);
+    setAnalysis1Image(a1);
+    setAnalysis2Image(a2);
+    setAnalysis3Image(a3);
+  };
+  const handleRetrieve = emp => {
+    setEmployee(emp);
+    setSearchQuery(emp.nationalId || '');
+    parseAndSetDocs(emp);
+  };
+  const clearForm = () => {
+    setEmployee(null);
+    setSearchQuery('');
+    setFormImage(null);
+    setAnalysis1Image(null);
+    setAnalysis2Image(null);
+    setAnalysis3Image(null);
+  };
+  const fileToBase64 = file => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  };
+  const handleImageChange = async (e, setter) => {
+    const file = e.target.files[0];
+    if (file) {
+      const base64 = await fileToBase64(file);
+      setter(base64);
+    }
+  };
+  const handleSubmit = async e => {
+    e.preventDefault();
+    if (!formImage && !analysis1Image && !analysis2Image && !analysis3Image) {
+      Swal.fire('تنبيه', 'يرجى رفع أي مستند أولاً', 'warning');
+      return;
+    }
+    let vStatus = 'غير مطعم / لا توجد بيانات';
+    if (employee.dose3) vStatus = 'مكتمل التطعيم';else if (employee.dose1 || employee.dose2) vStatus = "تطعيم غير مكتمل";
+    const analysisObj = {
+      a1: analysis1Image,
+      a2: analysis2Image,
+      a3: analysis3Image
+    };
+
+    // We send formImage as string, analysisImages as JSON string
+    const success = await api.saveNeedlestick({
+      nationalId: employee.nationalId,
+      name: employee.name,
+      formImage: formImage || '',
+      analysisImages: JSON.stringify(analysisObj),
+      vaccineStatus: vStatus
+    });
+    if (success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'تم',
+        text: 'تم الحفظ بنجاح',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      clearForm();
+      loadAllEmployees(); // refresh table
+    }
+  };
+  const renderUploadBox = (title, image, setter) => /*#__PURE__*/React.createElement("div", {
+    className: "border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:bg-slate-50 transition-colors relative flex flex-col items-center justify-center min-h-[140px]"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "file",
+    accept: "image/*,.pdf",
+    onChange: e => handleImageChange(e, setter),
+    className: "absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+  }), !image ? /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col items-center justify-center gap-2 pointer-events-none"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-10 h-10 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mb-1"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-upload text-lg"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "font-bold text-slate-700 text-sm"
+  }, title), /*#__PURE__*/React.createElement("span", {
+    className: "text-xs text-slate-500"
+  }, "\u0627\u0636\u063A\u0637 \u0623\u0648 \u0627\u0633\u062D\u0628 \u0627\u0644\u0645\u0644\u0641 \u0647\u0646\u0627")) : /*#__PURE__*/React.createElement("div", {
+    className: "relative group w-full flex flex-col items-center"
+  }, image.startsWith('data:image') ? /*#__PURE__*/React.createElement("img", {
+    src: image,
+    className: "h-24 object-contain rounded-lg border border-slate-200 shadow-sm"
+  }) : /*#__PURE__*/React.createElement("div", {
+    className: "p-3 bg-slate-100 border border-slate-200 rounded-lg text-sm font-bold text-slate-700 w-full flex items-center justify-center gap-2"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-file-pdf text-rose-500"
+  }), " PDF"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: e => {
+      e.preventDefault();
+      setter(null);
+    },
+    className: "absolute -top-2 -right-2 z-30 bg-white text-rose-500 border border-rose-200 rounded-full w-7 h-7 flex items-center justify-center shadow-sm hover:!bg-rose-500 hover:text-white transition-colors cursor-pointer"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-times text-xs"
+  }))));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "space-y-6 animate-fadeIn"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-6 border-b border-slate-100 bg-slate-50/50"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-xl font-bold text-slate-800 flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-rose-100 p-2 rounded-lg text-rose-600"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-table"
+  })), "\u062C\u062F\u0648\u0644 \u0627\u0633\u062A\u0645\u0627\u0631\u0627\u062A \u0627\u0644\u0648\u062E\u0632")), /*#__PURE__*/React.createElement("div", {
+    className: "overflow-x-auto"
+  }, isLoadingList ? /*#__PURE__*/React.createElement("div", {
+    className: "p-12 text-center text-slate-500 font-bold"
+  }, "\u062C\u0627\u0631\u064A \u062A\u062D\u0645\u064A\u0644 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A...") : employeesList.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "p-12 text-center text-slate-400 font-bold"
+  }, "\u0644\u0627 \u062A\u0648\u062C\u062F \u0627\u0633\u062A\u0645\u0627\u0631\u0627\u062A \u0648\u062E\u0632 \u0645\u0633\u062C\u0644\u0629 \u062D\u0627\u0644\u064A\u0627\u064B") : /*#__PURE__*/React.createElement("table", {
+    className: "w-full text-right border-collapse whitespace-nowrap"
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
+    className: "bg-white border-b border-slate-200"
+  }, /*#__PURE__*/React.createElement("th", {
+    className: "p-4 font-bold text-slate-500 text-sm"
+  }, "\u0627\u0644\u0627\u0633\u0645"), /*#__PURE__*/React.createElement("th", {
+    className: "p-4 font-bold text-slate-500 text-sm"
+  }, "\u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0642\u0648\u0645\u064A"), /*#__PURE__*/React.createElement("th", {
+    className: "p-4 font-bold text-slate-500 text-sm"
+  }, "\u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646"), /*#__PURE__*/React.createElement("th", {
+    className: "p-4 font-bold text-slate-500 text-sm text-center"
+  }, "\u0627\u0633\u062A\u0645\u0627\u0631\u0629 \u0627\u0644\u0648\u062E\u0632"), /*#__PURE__*/React.createElement("th", {
+    className: "p-4 font-bold text-slate-500 text-sm text-center"
+  }, "\u0627\u0644\u062A\u062D\u0644\u064A\u0644 \u0627\u0644\u0623\u0648\u0644"), /*#__PURE__*/React.createElement("th", {
+    className: "p-4 font-bold text-slate-500 text-sm text-center"
+  }, "\u0627\u0644\u062A\u062D\u0644\u064A\u0644 \u0627\u0644\u062B\u0627\u0646\u064A"), /*#__PURE__*/React.createElement("th", {
+    className: "p-4 font-bold text-slate-500 text-sm text-center"
+  }, "\u0627\u0644\u062A\u062D\u0644\u064A\u0644 \u0627\u0644\u062B\u0627\u0644\u062B"), /*#__PURE__*/React.createElement("th", {
+    className: "p-4 font-bold text-slate-500 text-sm text-center"
+  }, "\u0625\u062C\u0631\u0627\u0621"))), /*#__PURE__*/React.createElement("tbody", null, employeesList.map((emp, idx) => /*#__PURE__*/React.createElement("tr", {
+    key: idx,
+    className: "border-b border-slate-100 hover:bg-slate-50 transition-colors"
+  }, /*#__PURE__*/React.createElement("td", {
+    className: "p-4 font-bold text-slate-800 text-sm"
+  }, emp.name), /*#__PURE__*/React.createElement("td", {
+    className: "p-4 text-slate-600 text-sm"
+  }, emp.nationalId), /*#__PURE__*/React.createElement("td", {
+    className: "p-4 text-slate-600 text-sm",
+    dir: "ltr"
+  }, emp.phone || '-'), /*#__PURE__*/React.createElement("td", {
+    className: "p-4 text-center"
+  }, emp.form ? /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-check-circle text-emerald-500"
+  }) : /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-times-circle text-slate-300"
+  })), /*#__PURE__*/React.createElement("td", {
+    className: "p-4 text-center"
+  }, emp.a1 ? /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-check-circle text-emerald-500"
+  }) : /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-times-circle text-slate-300"
+  })), /*#__PURE__*/React.createElement("td", {
+    className: "p-4 text-center"
+  }, emp.a2 ? /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-check-circle text-emerald-500"
+  }) : /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-times-circle text-slate-300"
+  })), /*#__PURE__*/React.createElement("td", {
+    className: "p-4 text-center"
+  }, emp.a3 ? /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-check-circle text-emerald-500"
+  }) : /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-times-circle text-slate-300"
+  })), /*#__PURE__*/React.createElement("td", {
+    className: "p-4 text-center"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => handleRetrieve(emp),
+    className: "bg-rose-100 text-rose-700 hover:bg-rose-200 px-4 py-1.5 rounded-lg font-bold text-xs transition-colors cursor-pointer"
+  }, "\u0627\u0633\u062A\u0631\u062C\u0627\u0639")))))))), employee ? /*#__PURE__*/React.createElement("div", {
+    className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden animate-fadeIn"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-xl font-bold text-slate-800 flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-rose-100 p-2 rounded-lg text-rose-600"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-notes-medical"
+  })), "\u0627\u0633\u062A\u0643\u0645\u0627\u0644 \u0627\u0644\u0627\u0633\u062A\u0645\u0627\u0631\u0629"), /*#__PURE__*/React.createElement("button", {
+    onClick: clearForm,
+    className: "text-slate-400 hover:text-slate-600 font-bold text-sm bg-slate-100 px-4 py-2 rounded-xl cursor-pointer"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-arrow-right"
+  }), " \u0639\u0648\u062F\u0629")), /*#__PURE__*/React.createElement("div", {
+    className: "p-6 md:p-8"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mb-6 bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "text-slate-500 font-bold block mb-1 text-sm"
+  }, "\u0627\u0644\u0627\u0633\u0645"), /*#__PURE__*/React.createElement("span", {
+    className: "font-bold text-rose-900"
+  }, employee.name)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "text-slate-500 font-bold block mb-1 text-sm"
+  }, "\u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0642\u0648\u0645\u064A"), /*#__PURE__*/React.createElement("span", {
+    className: "font-bold text-rose-900"
+  }, employee.nationalId)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "text-slate-500 font-bold block mb-1 text-sm text-right"
+  }, "\u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646"), /*#__PURE__*/React.createElement("span", {
+    className: "font-bold text-rose-900",
+    dir: "ltr"
+  }, employee.phone || '-'))), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 md:grid-cols-2 gap-6"
+  }, renderUploadBox('استمارة الوخز', formImage, setFormImage), renderUploadBox('التحليل الأول', analysis1Image, setAnalysis1Image), renderUploadBox('التحليل الثاني', analysis2Image, setAnalysis2Image), renderUploadBox('التحليل الثالث', analysis3Image, setAnalysis3Image)), /*#__PURE__*/React.createElement("div", {
+    className: "mt-8 flex justify-end pt-6 border-t border-slate-100"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleSubmit,
+    className: "w-full sm:w-auto flex items-center justify-center gap-2 px-10 py-3.5 bg-rose-600 text-white rounded-xl hover:bg-rose-700 transition-colors font-bold shadow-md text-lg cursor-pointer"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-upload"
+  }), " \u062D\u0641\u0638 \u0627\u0644\u0645\u0633\u062A\u0646\u062F\u0627\u062A")))) : /*#__PURE__*/React.createElement("div", {
+    className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden animate-fadeIn"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-6 border-b border-slate-100 bg-slate-50/50"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-xl font-bold text-slate-800 flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-rose-100 p-2 rounded-lg text-rose-600"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-search"
+  })), "\u0628\u062D\u062B \u0639\u0646 \u0639\u0627\u0645\u0644 \u0644\u0625\u0636\u0627\u0641\u0629 \u0627\u0633\u062A\u0645\u0627\u0631\u0629")), /*#__PURE__*/React.createElement("div", {
+    className: "p-6 md:p-8 flex flex-col md:flex-row gap-4 text-right"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "relative flex-1"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-id-card absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: searchQuery,
+    onChange: e => setSearchQuery(e.target.value.replace(/[^0-9]/g, '')),
+    placeholder: "\u0623\u062F\u062E\u0644 \u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0642\u0648\u0645\u064A (14 \u0631\u0642\u0645)...",
+    maxLength: "14",
+    className: "w-full py-4 pr-11 pl-4 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none font-bold transition-all"
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: handleSearch,
+    disabled: isSearching || searchQuery.length !== 14,
+    className: "cursor-pointer md:w-auto w-full flex items-center justify-center gap-2 bg-slate-800 text-white px-8 py-4 rounded-xl font-bold hover:bg-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+  }, isSearching ? /*#__PURE__*/React.createElement("div", {
+    className: "w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"
+  }) : /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-search"
+  }), /*#__PURE__*/React.createElement("span", null, "\u0628\u062D\u062B")))));
+};
+
+// ==========================================
+// المكون الرئيسي (Main App Component)
+// ==========================================
+var App = function App() {
+  var _useState23 = useState('vaccinations'),
+    _useState24 = _slicedToArray(_useState23, 2),
+    currentTab = _useState24[0],
+    setCurrentTab = _useState24[1];
+  var _useState25 = useState(false),
+    _useState26 = _slicedToArray(_useState25, 2),
+    isLoading = _useState26[0],
+    setIsLoading = _useState26[1];
+  var api = {
+    fetchEmployee: function () {
+      var _fetchEmployee = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee9(nationalId) {
+        var res, data, _t;
+        return _regenerator().w(function (_context9) {
+          while (1) switch (_context9.p = _context9.n) {
+            case 0:
+              setIsLoading(true);
+              _context9.p = 1;
+              _context9.n = 2;
+              return fetch("".concat(GOOGLE_SCRIPT_URL, "?action=getEmployee&nationalId=").concat(nationalId));
+            case 2:
+              res = _context9.v;
+              _context9.n = 3;
+              return res.json();
+            case 3:
+              data = _context9.v;
+              if (!(data.status === 'success' && data.employee)) {
+                _context9.n = 4;
+                break;
+              }
+              return _context9.a(2, data.employee);
+            case 4:
+              Swal.fire('تنبيه', 'الموظف غير موجود في قاعدة البيانات', 'info');
+            case 5:
+              _context9.n = 7;
+              break;
+            case 6:
+              _context9.p = 6;
+              _t = _context9.v;
+              Swal.fire('خطأ', 'فشل الاتصال بالخادم', 'error');
+            case 7:
+              _context9.p = 7;
+              setIsLoading(false);
+              return _context9.f(7);
+            case 8:
+              return _context9.a(2, null);
+          }
+        }, _callee9, null, [[1, 6, 7, 8]]);
+      }));
+      function fetchEmployee(_x4) {
+        return _fetchEmployee.apply(this, arguments);
+      }
+      return fetchEmployee;
+    }(),
+    saveNeedlestick: function () {
+      var _saveNeedlestick = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0(params) {
+        var buildQS, res, data, _res, _data, _t2, _t3;
+        return _regenerator().w(function (_context0) {
+          while (1) switch (_context0.p = _context0.n) {
+            case 0:
+              setIsLoading(true);
+              buildQS = function buildQS(obj) {
+                return Object.keys(obj).map(function (k) {
+                  return "".concat(encodeURIComponent(k), "=").concat(encodeURIComponent(obj[k] || ''));
+                }).join('&');
+              };
+              _context0.p = 1;
+              _context0.n = 2;
+              return fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(_objectSpread({
+                  action: 'saveNeedlestick'
+                }, params))
+              });
+            case 2:
+              res = _context0.v;
+              _context0.n = 3;
+              return res.json();
+            case 3:
+              data = _context0.v;
+              if (!(data.status === 'success')) {
+                _context0.n = 4;
+                break;
+              }
+              Swal.fire({
+                icon: 'success',
+                title: 'تم',
+                text: 'تم حفظ استمارة الوخز',
+                timer: 2000,
+                showConfirmButton: false
+              });
+              return _context0.a(2, true);
+            case 4:
+              _context0.n = 11;
+              break;
+            case 5:
+              _context0.p = 5;
+              _t2 = _context0.v;
+              _context0.p = 6;
+              _context0.n = 7;
+              return fetch("".concat(GOOGLE_SCRIPT_URL, "?action=saveNeedlestick&").concat(buildQS(params)));
+            case 7:
+              _res = _context0.v;
+              _context0.n = 8;
+              return _res.json();
+            case 8:
+              _data = _context0.v;
+              if (!(_data.status === 'success')) {
+                _context0.n = 9;
+                break;
+              }
+              Swal.fire({
+                icon: 'success',
+                title: 'تم',
+                text: 'تم حفظ استمارة الوخز',
+                timer: 2000,
+                showConfirmButton: false
+              });
+              return _context0.a(2, true);
+            case 9:
+              _context0.n = 11;
+              break;
+            case 10:
+              _context0.p = 10;
+              _t3 = _context0.v;
+              Swal.fire('خطأ', 'فشل حفظ البيانات', 'error');
+            case 11:
+              _context0.p = 11;
+              setIsLoading(false);
+              return _context0.f(11);
+            case 12:
+              return _context0.a(2, false);
+          }
+        }, _callee0, null, [[6, 10], [1, 5, 11, 12]]);
+      }));
+      function saveNeedlestick(_x5) {
+        return _saveNeedlestick.apply(this, arguments);
+      }
+      return saveNeedlestick;
+    }(),
+    loadEmployees: function () {
+      var _loadEmployees = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
+        var res, data, _t4;
+        return _regenerator().w(function (_context1) {
+          while (1) switch (_context1.p = _context1.n) {
+            case 0:
+              setIsLoading(true);
+              _context1.p = 1;
+              _context1.n = 2;
+              return fetch("".concat(GOOGLE_SCRIPT_URL, "?action=getAllEmployees"));
+            case 2:
+              res = _context1.v;
+              _context1.n = 3;
+              return res.json();
+            case 3:
+              data = _context1.v;
+              if (!(data.status === 'success')) {
+                _context1.n = 4;
+                break;
+              }
+              return _context1.a(2, data.employees);
+            case 4:
+              _context1.n = 6;
+              break;
+            case 5:
+              _context1.p = 5;
+              _t4 = _context1.v;
+              console.error("Fetch Error:", data); Swal.fire('خطأ', 'فشل تحميل قائمة العاملين: ' + (data ? JSON.stringify(data) : "Network Error"), 'error');
+            case 6:
+              _context1.p = 6;
+              setIsLoading(false);
+              return _context1.f(6);
+            case 7:
+              return _context1.a(2, null);
+          }
+        }, _callee1, null, [[1, 5, 6, 7]]);
+      }));
+      function loadEmployees() {
+        return _loadEmployees.apply(this, arguments);
+      }
+      return loadEmployees;
+    }(),
+    saveEmployee: function () {
+      var _saveEmployee = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee10(params) {
+        var buildQS, res, data, _res2, _data2, _t5, _t6;
+        return _regenerator().w(function (_context10) {
+          while (1) switch (_context10.p = _context10.n) {
+            case 0:
+              setIsLoading(true);
+              buildQS = function buildQS(obj) {
+                return Object.keys(obj).map(function (k) {
+                  return "".concat(encodeURIComponent(k), "=").concat(encodeURIComponent(obj[k] || ''));
+                }).join('&');
+              };
+              _context10.p = 1;
+              _context10.n = 2;
+              return fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(_objectSpread({
+                  action: 'saveEmployee'
+                }, params))
+              });
+            case 2:
+              res = _context10.v;
+              _context10.n = 3;
+              return res.json();
+            case 3:
+              data = _context10.v;
+              if (!(data.status === 'success')) {
+                _context10.n = 4;
+                break;
+              }
+              Swal.fire({
+                icon: 'success',
+                title: 'تم',
+                text: 'تم حفظ بيانات العامل',
+                timer: 1500,
+                showConfirmButton: false
+              });
+              return _context10.a(2, true);
+            case 4:
+              _context10.n = 11;
+              break;
+            case 5:
+              _context10.p = 5;
+              _t5 = _context10.v;
+              _context10.p = 6;
+              _context10.n = 7;
+              return fetch("".concat(GOOGLE_SCRIPT_URL, "?action=saveEmployee&").concat(buildQS(params)));
+            case 7:
+              _res2 = _context10.v;
+              _context10.n = 8;
+              return _res2.json();
+            case 8:
+              _data2 = _context10.v;
+              if (!(_data2.status === 'success')) {
+                _context10.n = 9;
+                break;
+              }
+              Swal.fire({
+                icon: 'success',
+                title: 'تم',
+                text: 'تم حفظ بيانات العامل',
+                timer: 1500,
+                showConfirmButton: false
+              });
+              return _context10.a(2, true);
+            case 9:
+              _context10.n = 11;
+              break;
+            case 10:
+              _context10.p = 10;
+              _t6 = _context10.v;
+              Swal.fire('خطأ', 'فشل حفظ البيانات', 'error');
+            case 11:
+              _context10.p = 11;
+              setIsLoading(false);
+              return _context10.f(11);
+            case 12:
+              return _context10.a(2, false);
+          }
+        }, _callee10, null, [[6, 10], [1, 5, 11, 12]]);
+      }));
+      function saveEmployee(_x6) {
+        return _saveEmployee.apply(this, arguments);
+      }
+      return saveEmployee;
+    }(),
+    saveMultipleEmployees: function () {
+      var _saveMultipleEmployees = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee11(employeesArray) {
+        var res, data, _t7;
+        return _regenerator().w(function (_context11) {
+          while (1) switch (_context11.p = _context11.n) {
+            case 0:
+              setIsLoading(true);
+              _context11.p = 1;
+              _context11.n = 2;
+              return fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                  action: 'saveMultipleEmployees',
+                  employees: employeesArray
+                })
+              });
+            case 2:
+              res = _context11.v;
+              _context11.n = 3;
+              return res.json();
+            case 3:
+              data = _context11.v;
+              if (!(data.status === 'success')) {
+                _context11.n = 4;
+                break;
+              }
+              Swal.fire({
+                icon: 'success',
+                title: 'تم',
+                text: "\u062A\u0645 \u062D\u0641\u0638 \u0628\u064A\u0627\u0646\u0627\u062A ".concat(data.count, " \u0639\u0627\u0645\u0644 \u0628\u0646\u062C\u0627\u062D"),
+                timer: 2000,
+                showConfirmButton: false
+              });
+              return _context11.a(2, true);
+            case 4:
+              _context11.n = 6;
+              break;
+            case 5:
+              _context11.p = 5;
+              _t7 = _context11.v;
+              Swal.fire('خطأ', 'فشل حفظ البيانات المجمعة. تأكد من حجم البيانات أو إعدادات الشبكة', 'error');
+            case 6:
+              _context11.p = 6;
+              setIsLoading(false);
+              return _context11.f(6);
+            case 7:
+              return _context11.a(2, false);
+          }
+        }, _callee11, null, [[1, 5, 6, 7]]);
+      }));
+      function saveMultipleEmployees(_x7) {
+        return _saveMultipleEmployees.apply(this, arguments);
+      }
+      return saveMultipleEmployees;
+    }(),
+    deleteEmployee: function () {
+      var _deleteEmployee = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12(nationalId) {
+        var res, data, _t8;
+        return _regenerator().w(function (_context12) {
+          while (1) switch (_context12.p = _context12.n) {
+            case 0:
+              setIsLoading(true);
+              _context12.p = 1;
+              _context12.n = 2;
+              return fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                  action: 'deleteEmployee',
+                  nationalId: nationalId
+                })
+              });
+            case 2:
+              res = _context12.v;
+              _context12.n = 3;
+              return res.json();
+            case 3:
+              data = _context12.v;
+              if (!(data.status === 'success')) {
+                _context12.n = 4;
+                break;
+              }
+              Swal.fire({
+                icon: 'success',
+                title: 'تم',
+                text: 'تم الحذف بنجاح',
+                timer: 1500,
+                showConfirmButton: false
+              });
+              return _context12.a(2, true);
+            case 4:
+              _context12.n = 6;
+              break;
+            case 5:
+              _context12.p = 5;
+              _t8 = _context12.v;
+              Swal.fire('خطأ', 'فشل إجراء الحذف', 'error');
+            case 6:
+              _context12.p = 6;
+              setIsLoading(false);
+              return _context12.f(6);
+            case 7:
+              return _context12.a(2, false);
+          }
+        }, _callee12, null, [[1, 5, 6, 7]]);
+      }));
+      function deleteEmployee(_x8) {
+        return _deleteEmployee.apply(this, arguments);
+      }
+      return deleteEmployee;
+    }()
+  };
+  return /*#__PURE__*/React.createElement(Layout, {
+    currentTab: currentTab,
+    setCurrentTab: setCurrentTab
+  }, isLoading && /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center animate-fadeIn"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-white p-8 rounded-2xl shadow-xl flex flex-col items-center"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "animate-spin rounded-full h-14 w-14 border-4 border-slate-100 border-t-emerald-500 mb-4"
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "text-slate-800 font-bold text-lg"
+  }, "\u062C\u0627\u0631\u064A \u0645\u0639\u0627\u0644\u062C\u0629 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A..."))), currentTab === 'vaccinations' && /*#__PURE__*/React.createElement(Vaccinations, {
+    api: api
+  }), currentTab === 'injuries' && /*#__PURE__*/React.createElement(Injuries, {
+    api: api
+  }), currentTab === 'sync_settings' && /*#__PURE__*/React.createElement(SyncSettings, {
+    api: api
+  }));
+};
+
+// ==========================================
+// مكون إعدادات المزامنة مع Google Sheets (SyncSettings Component)
+// ==========================================
+var SyncSettings = function SyncSettings(_refSettings) {
+  var api = _refSettings.api;
+  var _useStateSheet = useState(''),
+    _useStateSheet2 = _slicedToArray(_useStateSheet, 2),
+    sheetId = _useStateSheet2[0],
+    setSheetId = _useStateSheet2[1];
+  var _useStateSyncing = useState(false),
+    _useStateSyncing2 = _slicedToArray(_useStateSyncing, 2),
+    syncing = _useStateSyncing2[0],
+    setSyncing = _useStateSyncing2[1];
+  var _useStateStatus = useState(null),
+    _useStateStatus2 = _slicedToArray(_useStateStatus, 2),
+    statusMsg = _useStateStatus2[0],
+    setStatusMsg = _useStateStatus2[1];
+
+  useEffect(function () {
+    fetch('/api?action=getSyncSettings')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.status === 'success' && data.sheetId) {
+          setSheetId(data.sheetId);
+        }
+      })
+      .catch(function(err) { console.error(err); });
+  }, []);
+
+  var handleSave = function handleSave() {
+    fetch('/api?action=saveSyncSettings&sheetId=' + encodeURIComponent(sheetId), { method: 'POST' })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.status === 'success') {
+          Swal.fire({
+            icon: 'success',
+            title: 'تم الحفظ',
+            text: 'تم حفظ معرف جدول البيانات بنجاح',
+            confirmButtonText: 'حسناً',
+            confirmButtonColor: '#059669'
+          });
+        } else {
+          Swal.fire('خطأ', 'فشل حفظ الإعدادات', 'error');
+        }
+      })
+      .catch(function(err) { Swal.fire('خطأ', 'حدث خطأ في الاتصال بالسيرفر', 'error'); });
+  };
+
+  var handleSync = function handleSync() {
+    setSyncing(true);
+    setStatusMsg(null);
+    fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sheetId: sheetId })
+    })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        setSyncing(false);
+        if (data.status === 'success') {
+          var details = data.data;
+          setStatusMsg({
+            type: 'success',
+            text: 'تمت المزامنة بنجاح! تم استيراد ' + (details.empCount || 0) + ' موظف و ' + (details.nsCount || 0) + ' استمارة وخز.'
+          });
+          Swal.fire({
+            icon: 'success',
+            title: 'تمت المزامنة بنجاح',
+            text: 'تم تحديث بيانات Turso من Google Sheets',
+            confirmButtonText: 'ممتاز',
+            confirmButtonColor: '#059669'
+          });
+        } else {
+          setStatusMsg({
+            type: 'error',
+            text: 'فشلت المزامنة: ' + data.message
+          });
+          Swal.fire('خطأ في المزامنة', data.message, 'error');
+        }
+      })
+      .catch(function(err) {
+        setSyncing(false);
+        setStatusMsg({
+          type: 'error',
+          text: 'حدث خطأ في الاتصال بالشبكة.'
+        });
+        Swal.fire('خطأ', 'فشل الاتصال بالخادم', 'error');
+      });
+  };
+
+  return /*#__PURE__*/React.createElement("div", { className: "space-y-6 animate-fadeIn text-right", dir: "rtl" },
+    /*#__PURE__*/React.createElement("div", { className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6" },
+      /*#__PURE__*/React.createElement("div", { className: "flex items-center gap-3 mb-6" },
+        /*#__PURE__*/React.createElement("div", { className: "bg-emerald-100 p-2.5 rounded-xl text-emerald-600" },
+          /*#__PURE__*/React.createElement("i", { className: "fas fa-rotate text-2xl" })
+        ),
+        /*#__PURE__*/React.createElement("h2", { className: "font-bold text-xl text-slate-800" }, "مزامنة البيانات مع Google Sheets")
+      ),
+      /*#__PURE__*/React.createElement("p", { className: "text-slate-600 mb-6 text-sm leading-relaxed font-semibold" }, 
+        "يتيح لك هذا القسم ربط التطبيق بجدول بيانات Google (Google Sheet) لمزامنة قائمة الموظفين واستمارات الوخز تلقائياً مع قاعدة بيانات Turso."
+      ),
+      /*#__PURE__*/React.createElement("div", { className: "space-y-4" },
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("label", { className: "block text-sm font-bold text-slate-700 mb-2" }, "معرف جدول بيانات جوجل (Google Sheet ID)"),
+          /*#__PURE__*/React.createElement("input", {
+            type: "text",
+            value: sheetId,
+            onChange: function(e) { setSheetId(e.target.value); },
+            placeholder: "أدخل معرف الجدول (مثال: 1aBcDeFgHiJkLmNoPqRsTuVwXyZ)",
+            className: "block w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 bg-white font-mono text-sm"
+          })
+        ),
+        /*#__PURE__*/React.createElement("div", { className: "flex flex-wrap gap-3 pt-2" },
+          /*#__PURE__*/React.createElement("button", {
+            onClick: handleSave,
+            className: "bg-slate-700 hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
+          }, /*#__PURE__*/React.createElement("i", { className: "fas fa-save" }), "حفظ المعرف"),
+          /*#__PURE__*/React.createElement("button", {
+            onClick: handleSync,
+            disabled: syncing,
+            className: "bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
+          }, /*#__PURE__*/React.createElement("i", { className: "fas " + (syncing ? "fa-spinner fa-spin" : "fa-rotate") }), syncing ? "جاري المزامنة..." : "ابدأ المزامنة الآن")
+        )
+      ),
+      statusMsg && /*#__PURE__*/React.createElement("div", {
+        className: "mt-6 p-4 rounded-xl border " + (statusMsg.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800')
+      },
+        /*#__PURE__*/React.createElement("div", { className: "flex items-start gap-2.5" },
+          /*#__PURE__*/React.createElement("i", { className: "fas " + (statusMsg.type === 'success' ? "fa-check-circle text-emerald-500" : "fa-exclamation-circle text-rose-500") + " mt-0.5" }),
+          /*#__PURE__*/React.createElement("p", { className: "text-sm font-bold" }, statusMsg.text)
+        )
+      )
+    ),
+    /*#__PURE__*/React.createElement("div", { className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6" },
+      /*#__PURE__*/React.createElement("h3", { className: "font-bold text-lg text-slate-800 mb-4" }, "تعليمات إعداد جدول بيانات جوجل:"),
+      /*#__PURE__*/React.createElement("ol", { className: "list-decimal list-inside space-y-3 text-slate-600 text-sm leading-relaxed text-right font-medium", dir: "rtl" },
+        /*#__PURE__*/React.createElement("li", null, "قم بإنشاء جدول بيانات جديد على Google Sheets."),
+        /*#__PURE__*/React.createElement("li", null, "قم بتسمية الورقة الأولى (Tab 1) باسم ", /*#__PURE__*/React.createElement("strong", { className: "text-emerald-600 font-bold" }, "vaccine_employees"), " والورقة الثانية (Tab 2) باسم ", /*#__PURE__*/React.createElement("strong", { className: "text-emerald-600 font-bold" }, "vaccine_needlesticks"), "."),
+        /*#__PURE__*/React.createElement("li", null, "تأكد من ترتيب الأعمدة في الصف الأول (الرأس) كالآتي:",
+          /*#__PURE__*/React.createElement("ul", { className: "list-disc list-inside mr-6 mt-1 space-y-1 text-xs text-slate-500 font-bold" },
+            /*#__PURE__*/React.createElement("li", null, "جدول الموظفين: [رقم البطاقة، الاسم، الفئة، رقم التليفون، الجرعة الأولى، الجرعة الثانية، الجرعة الثالثة، ملاحظات]"),
+            /*#__PURE__*/React.createElement("li", null, "جدول الوخز: [رقم البطاقة، الاسم، التاريخ، الوقت، مكان الإصابة، الأداة المستخدمة، التفاصيل، حالة التطعيم، طابع زمني]")
+          )
+        ),
+        /*#__PURE__*/React.createElement("li", null, "اضغط على زر المشاركة (Share) في أعلى اليسار بـ Google Sheets."),
+        /*#__PURE__*/React.createElement("li", null, "قم بتغيير صلاحية الوصول العام إلى ", /*#__PURE__*/React.createElement("strong", { className: "font-bold" }, "أى شخص لديه الرابط يمكنه العرض (Anyone with the link can view)"), "."),
+        /*#__PURE__*/React.createElement("li", null, "انسخ معرف الجدول من شريط العنوان (الرابط) - وهو الجزء الطويل المكون من حروف وأرقام بين ", /*#__PURE__*/React.createElement("code", { className: "bg-slate-100 px-1.5 py-0.5 rounded font-mono text-xs border border-slate-200" }, "/d/"), " و ", /*#__PURE__*/React.createElement("code", { className: "bg-slate-100 px-1.5 py-0.5 rounded font-mono text-xs border border-slate-200" }, "/edit"), "."),
+        /*#__PURE__*/React.createElement("li", null, "ضع المعرف في الحقل أعلاه واضغط حفظ ثم مزامنة!")
+      )
+    )
+  );
+};
+
+// ==========================================
+// مكون التقاط الأخطاء (Error Boundary)
+// ==========================================
+var ErrorBoundary = /*#__PURE__*/function (_React$Component) {
+  function ErrorBoundary(props) {
+    var _this;
+    _classCallCheck(this, ErrorBoundary);
+    _this = _callSuper(this, ErrorBoundary, [props]);
+    _this.state = {
+      hasError: false,
+      error: null
+    };
+    return _this;
+  }
+  _inherits(ErrorBoundary, _React$Component);
+  return _createClass(ErrorBoundary, [{
+    key: "componentDidCatch",
+    value: function componentDidCatch(error, errorInfo) {
+      console.error("App Error:", error, errorInfo);
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      if (this.state.hasError) {
+        var _this$state$error;
+        return /*#__PURE__*/React.createElement("div", {
+          className: "min-h-screen bg-rose-50 flex flex-col items-center justify-center p-8 text-center"
+        }, /*#__PURE__*/React.createElement("div", {
+          className: "bg-white p-6 rounded-2xl shadow-xl max-w-lg border border-rose-100"
+        }, /*#__PURE__*/React.createElement("i", {
+          className: "fas fa-exclamation-triangle text-4xl text-rose-500 mb-4"
+        }), /*#__PURE__*/React.createElement("h2", {
+          className: "text-xl font-bold text-slate-800 mb-2"
+        }, "\u0639\u0630\u0631\u0627\u064B\u060C \u062D\u062F\u062B \u062E\u0637\u0623 \u063A\u064A\u0631 \u0645\u062A\u0648\u0642\u0639"), /*#__PURE__*/React.createElement("p", {
+          className: "text-slate-600 font-semibold mb-4 text-sm"
+        }, (_this$state$error = this.state.error) === null || _this$state$error === void 0 ? void 0 : _this$state$error.toString()), /*#__PURE__*/React.createElement("button", {
+          onClick: function onClick() {
+            return window.location.reload();
+          },
+          className: "bg-rose-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-rose-700 transition-colors"
+        }, /*#__PURE__*/React.createElement("i", {
+          className: "fas fa-sync-alt ml-2"
+        }), " \u0625\u0639\u0627\u062F\u0629 \u062A\u062D\u0645\u064A\u0644 \u0627\u0644\u0635\u0641\u062D\u0629")));
+      }
+      return this.props.children;
+    }
+  }], [{
+    key: "getDerivedStateFromError",
+    value: function getDerivedStateFromError(error) {
+      return {
+        hasError: true,
+        error: error
+      };
+    }
+  }]);
+}(React.Component);
+var root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(/*#__PURE__*/React.createElement(ErrorBoundary, null, /*#__PURE__*/React.createElement(App, null)));
+</script>
+</body>
+</html>

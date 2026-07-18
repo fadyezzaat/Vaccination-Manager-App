@@ -1,0 +1,203 @@
+import "dotenv/config";
+import express from "express";
+import path from "path";
+import { createServer as createViteServer } from "vite";
+import { db, createTables, createInfectionTable } from "./src/lib/db.js";
+import { parse } from "csv-parse/sync";
+import { syncGoogleSheets } from "./sync.js";
+
+export const app = express();
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+// Initialize DB safely
+let dbInitialized = false;
+async function ensureDbInitialized() {
+  if (dbInitialized) return;
+  try {
+    await createTables();
+    await createInfectionTable();
+    console.log("Database tables verified successfully!");
+    dbInitialized = true;
+  } catch (error) {
+    console.error("Failed to create tables or sync data:", error);
+    throw error;
+  }
+}
+
+// Sync endpoint from Google Sheets (Manual trigger)
+app.post("/api/sync", async (req, res) => {
+  try {
+    await ensureDbInitialized();
+    const { sheetId } = req.body || {};
+    if (sheetId) {
+      await db.execute({
+        sql: "INSERT OR REPLACE INTO vaccine_settings (key, value) VALUES ('sheet_id', ?)",
+        args: [sheetId]
+      });
+    }
+    const result = await syncGoogleSheets(sheetId);
+    res.json({ status: "success", message: "Synced successfully from Google Sheets", data: result });
+  } catch (err: any) {
+    res.json({ status: "error", message: err.message });
+  }
+});
+
+// Main API Endpoint
+app.all("/api", async (req, res) => {
+  // Both GET query params and POST body could contain action
+  const params = { ...req.query, ...req.body };
+  const action = params.action;
+
+  try {
+    await ensureDbInitialized();
+
+    if (action === "getEmployee") {
+      const result = await db.execute({
+        sql: "SELECT * FROM vaccine_employees WHERE nationalId = ?",
+        args: [params.nationalId]
+      });
+      if (result.rows.length > 0) {
+        const emp = result.rows[0];
+        const employeeData = {
+          nationalId: emp.nationalId,
+          name: emp.name,
+          category: emp.category,
+          phone: emp.phone,
+          dose1: emp.dose1,
+          dose2: emp.dose2,
+          dose3: emp.dose3,
+          notes: emp.notes,
+          doses: [] as string[]
+        };
+        if (emp.dose1) employeeData.doses.push(String(emp.dose1));
+        if (emp.dose2) employeeData.doses.push(String(emp.dose2));
+        if (emp.dose3) employeeData.doses.push(String(emp.dose3));
+        
+        res.json({ status: "success", employee: employeeData });
+      } else {
+        res.json({ status: "error", message: "Employee not found" });
+      }
+    } 
+    else if (action === "getAllEmployees") {
+      const result = await db.execute("SELECT * FROM vaccine_employees");
+      res.json({ status: "success", employees: result.rows });
+    }
+    else if (action === "saveEmployee" || action === "saveEmployeeData") {
+      const { nationalId, name, category, phone, dose1, dose2, dose3, notes } = params;
+      
+      const existing = await db.execute({
+        sql: "SELECT * FROM vaccine_employees WHERE nationalId = ?",
+        args: [nationalId]
+      });
+
+      if (existing.rows.length > 0) {
+        await db.execute({
+          sql: "UPDATE vaccine_employees SET name=?, category=?, phone=?, dose1=?, dose2=?, dose3=?, notes=? WHERE nationalId=?",
+          args: [name || "", category || "", phone || "", dose1 || "", dose2 || "", dose3 || "", notes || "", nationalId]
+        });
+      } else {
+        await db.execute({
+          sql: "INSERT INTO vaccine_employees (nationalId, name, category, phone, dose1, dose2, dose3, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          args: [nationalId, name || "", category || "", phone || "", dose1 || "", dose2 || "", dose3 || "", notes || ""]
+        });
+      }
+      res.json({ status: "success", message: "Employee saved" });
+    }
+    else if (action === "saveMultipleEmployees") {
+      const employeesArray = typeof params.employees === "string" ? JSON.parse(params.employees) : params.employees;
+      if (!employeesArray || !employeesArray.length) {
+        res.json({ status: "error", message: "No employees provided" });
+        return;
+      }
+
+      for (const emp of employeesArray) {
+        const existing = await db.execute({
+          sql: "SELECT * FROM vaccine_employees WHERE nationalId = ?",
+          args: [emp.nationalId]
+        });
+        if (existing.rows.length > 0) {
+           await db.execute({
+            sql: "UPDATE vaccine_employees SET name=?, category=?, phone=?, dose1=?, dose2=?, dose3=?, notes=? WHERE nationalId=?",
+            args: [emp.name || "", emp.category || "", emp.phone || "", emp.dose1 || "", emp.dose2 || "", emp.dose3 || "", emp.notes || "", emp.nationalId]
+          });
+        } else {
+          await db.execute({
+            sql: "INSERT INTO vaccine_employees (nationalId, name, category, phone, dose1, dose2, dose3, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            args: [emp.nationalId, emp.name || "", emp.category || "", emp.phone || "", emp.dose1 || "", emp.dose2 || "", emp.dose3 || "", emp.notes || ""]
+          });
+        }
+      }
+      res.json({ status: "success", message: "Employees saved successfully", count: employeesArray.length });
+    }
+    else if (action === "deleteEmployee") {
+      await db.execute({
+        sql: "DELETE FROM vaccine_employees WHERE nationalId = ?",
+        args: [params.nationalId]
+      });
+      res.json({ status: "success", message: "Employee deleted" });
+    }
+    else if (action === "saveNeedlestick") {
+      const timestamp = new Date().toISOString();
+      await db.execute({
+        sql: "INSERT INTO vaccine_needlesticks (nationalId, name, date, time, location, tool, description, vaccineStatus, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        args: [
+          params.nationalId, params.name, params.date, params.time, 
+          params.location, params.tool, params.description, params.vaccineStatus, timestamp
+        ]
+      });
+      res.json({ status: "success", message: "Form saved" });
+    }
+    else if (action === "getSyncSettings") {
+      const result = await db.execute({
+        sql: "SELECT value FROM vaccine_settings WHERE key = 'sheet_id'",
+        args: []
+      });
+      const dbSheetId = result.rows.length > 0 ? result.rows[0].value : "";
+      const sheetId = process.env.VITE_SHEET_ID || dbSheetId || "";
+      res.json({ status: "success", sheetId });
+    }
+    else if (action === "saveSyncSettings") {
+      const { sheetId } = params;
+      await db.execute({
+        sql: "INSERT OR REPLACE INTO vaccine_settings (key, value) VALUES ('sheet_id', ?)",
+        args: [sheetId || ""]
+      });
+      res.json({ status: "success", message: "Settings saved successfully" });
+    }
+    else {
+      res.json({ status: "error", message: "Unknown action" });
+    }
+  } catch (err: any) {
+    console.error(err);
+    res.json({ status: "error", message: err.message });
+  }
+});
+
+// Start Server conditionally
+if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
+  async function startServer() {
+    const PORT = 3000;
+    // Vite middleware for development
+    if (process.env.NODE_ENV !== "production") {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+    } else {
+      const distPath = path.join(process.cwd(), 'dist');
+      app.use(express.static(distPath));
+      app.get('*', (req, res) => {
+        res.sendFile(path.join(distPath, 'index.html'));
+      });
+    }
+
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
+
+  startServer();
+}
