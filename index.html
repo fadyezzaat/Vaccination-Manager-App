@@ -206,8 +206,25 @@ var Vaccinations = function Vaccinations(_ref2) {
     _useState10 = _slicedToArray(_useState1, 2),
     searchName = _useState10[0],
     setSearchName = _useState10[1];
+  var _useState11 = useState([]),
+    _useState12 = _slicedToArray(_useState11, 2),
+    selectedIds = _useState12[0],
+    setSelectedIds = _useState12[1];
+  var _useState13 = useState(false),
+    _useState14 = _slicedToArray(_useState13, 2),
+    printOnlySelected = _useState14[0],
+    setPrintOnlySelected = _useState14[1];
   useEffect(function () {
     loadEmployeesData();
+  }, []);
+  useEffect(function () {
+    var restore = function restore() {
+      setPrintOnlySelected(false);
+    };
+    window.addEventListener('afterprint', restore);
+    return function () {
+      window.removeEventListener('afterprint', restore);
+    };
   }, []);
   var loadEmployeesData = /*#__PURE__*/function () {
     var _ref3 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
@@ -283,8 +300,13 @@ var Vaccinations = function Vaccinations(_ref2) {
         });
       }
     }
+    if (printOnlySelected) {
+      result = result.filter(function (emp) {
+        return selectedIds.includes(emp.nationalId);
+      });
+    }
     setFilteredEmployees(result);
-  }, [selectedCategory, searchName, selectedDoseStatus, employees]);
+  }, [selectedCategory, searchName, selectedDoseStatus, employees, printOnlySelected, selectedIds]);
   var groupedEmployees = useMemo(function () {
     var groups = {};
     filteredEmployees.forEach(function (emp) {
@@ -495,7 +517,79 @@ var Vaccinations = function Vaccinations(_ref2) {
     value: "outside"
   }, "\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649"), /*#__PURE__*/React.createElement("option", {
     value: "refused"
-  }, "\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636"))))), /*#__PURE__*/React.createElement("div", {
+  }, "\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636"))))), 
+  selectedIds.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 mt-2 animate-fadeIn no-print"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 font-bold text-emerald-800"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-check-double text-lg animate-bounce"
+  }), /*#__PURE__*/React.createElement("span", null, "تم تحديد (", selectedIds.length, ") موظفين للتعديل")), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 w-full sm:w-auto"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: function onClick() {
+      setPrintOnlySelected(true);
+      setTimeout(function () {
+        window.print();
+      }, 150);
+    },
+    className: "flex-1 sm:flex-none text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-print"
+  }), "\u0637\u0628\u0627\u0639\u0629 \u0627\u0644\u0645\u062D\u062F\u062F"), /*#__PURE__*/React.createElement("button", {
+    onClick: /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _calleeBulkDelete() {
+      var confirm, success;
+      return _regenerator().w(function (_contextBulk) {
+        while (1) switch (_contextBulk.n) {
+          case 0:
+            _contextBulk.n = 1;
+            return Swal.fire({
+              title: '\u0647\u0644 \u0623\u0646\u062A \u0645\u062A\u0623\u0643\u062F\u061F',
+              text: "هل تريد بالفعل حذف بيانات (".concat(selectedIds.length, ") موظف محددين؟ سيتم حذف سجلات التطعيم والوخز الخاصة بهم."),
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#ef4444',
+              cancelButtonColor: '#cbd5e1',
+              confirmButtonText: '\u0646\u0639\u0645\u060C \u0627\u062D\u0630\u0641 \u0627\u0644\u0643\u0644',
+              cancelButtonText: '\u0625\u0644\u063A\u0627\u0621'
+            });
+          case 1:
+            confirm = _contextBulk.v;
+            if (!confirm.isConfirmed) {
+              _contextBulk.n = 3;
+              break;
+            }
+            _contextBulk.n = 2;
+            return api.deleteMultipleEmployees(selectedIds);
+          case 2:
+            success = _contextBulk.v;
+            if (success) {
+              setSelectedIds([]);
+              loadEmployeesData();
+            }
+          case 3:
+            return _contextBulk.a(2);
+        }
+      }, _calleeBulkDelete);
+    })),
+    className: "flex-1 sm:flex-none text-white bg-rose-600 hover:bg-rose-700 px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-trash-alt"
+  }), "\u062D\u0630\u0641 \u0627\u0644\u0645\u062D\u062F\u062F"), /*#__PURE__*/React.createElement("button", {
+    onClick: function onClick() {
+      return setSelectedIds([]);
+    },
+    className: "flex-1 sm:flex-none text-slate-500 hover:text-slate-700 hover:bg-slate-100 px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center justify-center cursor-pointer"
+  }, "إلغاء التحديد"))),
+  printOnlySelected && /*#__PURE__*/React.createElement("div", {
+    className: "bg-amber-50 border border-amber-200 rounded-2xl p-4 flex justify-between items-center mb-4 mt-2 animate-fadeIn no-print font-bold text-amber-800"
+  }, /*#__PURE__*/React.createElement("span", null, "\u062A\u0645 \u062A\u0635\u0641\u064A\u0629 \u0627\u0644\u0643\u0634\u0641 \u0644\u0637\u0628\u0627\u0639\u0629 \u0627\u0644\u0645\u062D\u062F\u062F\u064A\u0646 \u0641\u0642\u0637."), /*#__PURE__*/React.createElement("button", {
+    onClick: function onClick() {
+      return setPrintOnlySelected(false);
+    },
+    className: "bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-colors"
+  }, "\u0639\u0631\u0636 \u0627\u0644\u0643\u0644")),
+  /*#__PURE__*/React.createElement("div", {
     className: "space-y-8 pb-8"
   }, Object.keys(groupedEmployees).length === 0 ? /*#__PURE__*/React.createElement("div", {
     className: "p-12 text-center bg-white"
@@ -521,6 +615,37 @@ var Vaccinations = function Vaccinations(_ref2) {
     }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
       className: "bg-white border-b border-slate-200"
     }, /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm text-center no-print w-12"
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "checkbox",
+      className: "w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer",
+      checked: emps.length > 0 && emps.every(function (emp) {
+        return selectedIds.includes(emp.nationalId);
+      }),
+      onChange: function onChange(e) {
+        var checked = e.target.checked;
+        var groupIds = emps.map(function (emp) {
+          return emp.nationalId;
+        });
+        if (checked) {
+          setSelectedIds(function (prev) {
+            var newIds = _toConsumableArray(prev);
+            groupIds.forEach(function (id) {
+              if (!newIds.includes(id)) {
+                newIds.push(id);
+              }
+            });
+            return newIds;
+          });
+        } else {
+          setSelectedIds(function (prev) {
+            return prev.filter(function (id) {
+              return !groupIds.includes(id);
+            });
+          });
+        }
+      }
+    })), /*#__PURE__*/React.createElement("th", {
       className: "p-5 font-bold text-slate-500 text-sm"
     }, "\u0627\u0644\u0627\u0633\u0645"), /*#__PURE__*/React.createElement("th", {
       className: "p-5 font-bold text-slate-500 text-sm"
@@ -541,6 +666,26 @@ var Vaccinations = function Vaccinations(_ref2) {
         key: emp.nationalId + idx,
         className: "border-b border-slate-100 hover:bg-slate-50 transition-colors group"
       }, /*#__PURE__*/React.createElement("td", {
+        className: "p-5 text-center no-print w-12"
+      }, /*#__PURE__*/React.createElement("input", {
+        type: "checkbox",
+        className: "w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer",
+        checked: selectedIds.includes(emp.nationalId),
+        onChange: function onChange(e) {
+          var checked = e.target.checked;
+          if (checked) {
+            setSelectedIds(function (prev) {
+              return [].concat(_toConsumableArray(prev), [emp.nationalId]);
+            });
+          } else {
+            setSelectedIds(function (prev) {
+              return prev.filter(function (id) {
+                return id !== emp.nationalId;
+              });
+            });
+          }
+        }
+      })), /*#__PURE__*/React.createElement("td", {
         className: "p-5 font-bold text-slate-800 text-sm"
       }, emp.name), /*#__PURE__*/React.createElement("td", {
         className: "p-5 text-slate-600 font-semibold text-sm"
@@ -1447,6 +1592,64 @@ var App = function App() {
         return _deleteEmployee.apply(this, arguments);
       }
       return deleteEmployee;
+    }(),
+    deleteMultipleEmployees: function () {
+      var _deleteMultipleEmployees = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee12_2(nationalIds) {
+        var res, data, _t8_2;
+        return _regenerator().w(function (_context12_2) {
+          while (1) switch (_context12_2.p = _context12_2.n) {
+            case 0:
+              setIsLoading(true);
+              _context12_2.p = 1;
+              _context12_2.n = 2;
+              return fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  action: 'deleteMultipleEmployees',
+                  nationalIds: nationalIds
+                })
+              });
+            case 2:
+              res = _context12_2.v;
+              _context12_2.n = 3;
+              return res.json();
+            case 3:
+              data = _context12_2.v;
+              if (!(data.status === 'success')) {
+                _context12_2.n = 4;
+                break;
+              }
+              Swal.fire({
+                icon: 'success',
+                title: 'تم',
+                text: 'تم الحذف بنجاح',
+                timer: 1500,
+                showConfirmButton: false
+              });
+              return _context12_2.a(2, true);
+            case 4:
+              _context12_2.n = 6;
+              break;
+            case 5:
+              _context12_2.p = 5;
+              _t8_2 = _context12_2.v;
+              Swal.fire('خطأ', 'فشل إجراء الحذف', 'error');
+            case 6:
+              _context12_2.p = 6;
+              setIsLoading(false);
+              return _context12_2.f(6);
+            case 7:
+              return _context12_2.a(2, false);
+          }
+        }, _callee12_2, null, [[1, 5, 6, 7]]);
+      }));
+      function deleteMultipleEmployees(_x8_2) {
+        return _deleteMultipleEmployees.apply(this, arguments);
+      }
+      return deleteMultipleEmployees;
     }()
   };
   return /*#__PURE__*/React.createElement(Layout, {

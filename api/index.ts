@@ -145,7 +145,27 @@ app.all("/api", async (req, res) => {
         sql: "DELETE FROM vaccine_employees WHERE nationalId = ?",
         args: [params.nationalId]
       });
+      await db.execute({
+        sql: "DELETE FROM vaccine_needlesticks WHERE nationalId = ?",
+        args: [params.nationalId]
+      });
       res.json({ status: "success", message: "Employee deleted" });
+    }
+    else if (action === "deleteMultipleEmployees") {
+      const nationalIds = typeof params.nationalIds === "string" ? JSON.parse(params.nationalIds) : params.nationalIds;
+      if (nationalIds && Array.isArray(nationalIds) && nationalIds.length > 0) {
+        for (const id of nationalIds) {
+          await db.execute({
+            sql: "DELETE FROM vaccine_employees WHERE nationalId = ?",
+            args: [id]
+          });
+          await db.execute({
+            sql: "DELETE FROM vaccine_needlesticks WHERE nationalId = ?",
+            args: [id]
+          });
+        }
+      }
+      res.json({ status: "success", message: "Employees deleted" });
     }
     else if (action === "importEmployees") {
       const employeesArray = typeof params.employees === "string" ? JSON.parse(params.employees) : params.employees;
