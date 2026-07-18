@@ -1,4 +1,4 @@
-import { db } from "./src/lib/db.js";
+import { db } from "./src/lib/db";
 import { parse } from "csv-parse/sync";
 
 export async function syncGoogleSheets(customSheetId?: string) {

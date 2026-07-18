@@ -1,10 +1,9 @@
 import "dotenv/config";
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
-import { db, createTables, createInfectionTable } from "./src/lib/db.js";
+import { db, createTables, createInfectionTable } from "./src/lib/db";
 import { parse } from "csv-parse/sync";
-import { syncGoogleSheets } from "./sync.js";
+import { syncGoogleSheets } from "./sync";
 
 export const app = express();
 
@@ -181,6 +180,7 @@ if (process.env.NODE_ENV !== "test" && !process.env.VERCEL) {
     const PORT = 3000;
     // Vite middleware for development
     if (process.env.NODE_ENV !== "production") {
+      const { createServer: createViteServer } = await import("vite");
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: "spa",
