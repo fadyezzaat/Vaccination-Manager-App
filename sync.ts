@@ -39,6 +39,11 @@ export async function syncGoogleSheets(customSheetId?: string) {
     }
 
     const empCsvText = await empResponse.text();
+    if (empCsvText.includes("google.visualization.Query.setResponse") || empCsvText.includes('"status":"error"')) {
+      const match = empCsvText.match(/"message"\s*:\s*"([^"]+)"/);
+      const googleMsg = match ? match[1] : "الجدول غير موجود أو غير صالح";
+      throw new Error(`خطأ في ورقة العمل الأولى: ${googleMsg}. يرجى التأكد من تسمية الورقة الأولى (Tab 1) في ملف Google Sheets الخاص بك باسم "vaccine_employees" باللغة الإنجليزية تماماً.`);
+    }
     if (empCsvText.includes("html") || empCsvText.includes("<!DOCTYPE")) {
       throw new Error("تنسيق البيانات غير صحيح. تأكد من ضبط مشاركة الجدول على 'أي شخص لديه الرابط يمكنه العرض' (Anyone with link can view).");
     }
@@ -51,14 +56,14 @@ export async function syncGoogleSheets(customSheetId?: string) {
     for (const row of empRecords) {
       const keys = Object.keys(row);
       if (keys.length === 0) continue;
-      const nationalId = String(row[keys[0]] || "").trim();
-      const name = String(row[keys[1]] || "").trim();
-      const category = String(row[keys[2]] || "").trim();
-      const phone = String(row[keys[3]] || "").trim();
-      const dose1 = String(row[keys[4]] || "").trim();
-      const dose2 = String(row[keys[5]] || "").trim();
-      const dose3 = String(row[keys[6]] || "").trim();
-      const notes = String(row[keys[7]] || "").trim();
+      const nationalId = keys[0] ? String(row[keys[0]] || "").trim() : "";
+      const name = keys[1] ? String(row[keys[1]] || "").trim() : "";
+      const category = keys[2] ? String(row[keys[2]] || "").trim() : "";
+      const phone = keys[3] ? String(row[keys[3]] || "").trim() : "";
+      const dose1 = keys[4] ? String(row[keys[4]] || "").trim() : "";
+      const dose2 = keys[5] ? String(row[keys[5]] || "").trim() : "";
+      const dose3 = keys[6] ? String(row[keys[6]] || "").trim() : "";
+      const notes = keys[7] ? String(row[keys[7]] || "").trim() : "";
 
       if (nationalId && nationalId !== 'رقم البطاقة' && nationalId !== 'National ID') {
         await db.execute({
@@ -79,6 +84,12 @@ export async function syncGoogleSheets(customSheetId?: string) {
       const nsCsvText = await nsResponse.text();
       // Only parse if it's not HTML error page
       if (!nsCsvText.includes("html") && !nsCsvText.includes("<!DOCTYPE")) {
+        if (nsCsvText.includes("google.visualization.Query.setResponse") || nsCsvText.includes('"status":"error"')) {
+          const match = nsCsvText.match(/"message"\s*:\s*"([^"]+)"/);
+          const googleMsg = match ? match[1] : "الجدول غير موجود أو غير صالح";
+          throw new Error(`خطأ في ورقة العمل الثانية: ${googleMsg}. يرجى التأكد من تسمية الورقة الثانية (Tab 2) في ملف Google Sheets الخاص بك باسم "vaccine_needlesticks" باللغة الإنجليزية تماماً.`);
+        }
+        
         const nsRecords = parse(nsCsvText, { columns: true, skip_empty_lines: true });
 
         await db.execute("DELETE FROM vaccine_needlesticks");
@@ -86,15 +97,15 @@ export async function syncGoogleSheets(customSheetId?: string) {
         for (const row of nsRecords) {
           const keys = Object.keys(row);
           if (keys.length === 0) continue;
-          const nationalId = String(row[keys[0]] || "").trim();
-          const name = String(row[keys[1]] || "").trim();
-          const date = String(row[keys[2]] || "").trim();
-          const time = String(row[keys[3]] || "").trim();
-          const location = String(row[keys[4]] || "").trim();
-          const tool = String(row[keys[5]] || "").trim();
-          const description = String(row[keys[6]] || "").trim();
-          const vaccineStatus = String(row[keys[7]] || "").trim();
-          const timestamp = String(row[keys[8]] || "").trim();
+          const nationalId = keys[0] ? String(row[keys[0]] || "").trim() : "";
+          const name = keys[1] ? String(row[keys[1]] || "").trim() : "";
+          const date = keys[2] ? String(row[keys[2]] || "").trim() : "";
+          const time = keys[3] ? String(row[keys[3]] || "").trim() : "";
+          const location = keys[4] ? String(row[keys[4]] || "").trim() : "";
+          const tool = keys[5] ? String(row[keys[5]] || "").trim() : "";
+          const description = keys[6] ? String(row[keys[6]] || "").trim() : "";
+          const vaccineStatus = keys[7] ? String(row[keys[7]] || "").trim() : "";
+          const timestamp = keys[8] ? String(row[keys[8]] || "").trim() : "";
 
           if (nationalId && nationalId !== 'رقم البطاقة' && nationalId !== 'National ID') {
             await db.execute({
