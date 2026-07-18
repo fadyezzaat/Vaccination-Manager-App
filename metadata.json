@@ -1,5 +1,6 @@
 {
   "name": "Remix: Infection \u0026 Vaccination Manager",
   "description": "تطبيق لإدارة تطعيمات العاملين وحالات الوخز مع دعم إدخال البيانات من الإكسيل.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
