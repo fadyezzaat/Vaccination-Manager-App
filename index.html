@@ -1460,151 +1460,309 @@ var App = function App() {
 // ==========================================
 // مكون إعدادات المزامنة مع Google Sheets (SyncSettings Component)
 // ==========================================
-var SyncSettings = function SyncSettings(_refSettings) {
-  var api = _refSettings.api;
-  var _useStateSheet = useState(''),
-    _useStateSheet2 = _slicedToArray(_useStateSheet, 2),
-    sheetId = _useStateSheet2[0],
-    setSheetId = _useStateSheet2[1];
-  var _useStateSyncing = useState(false),
-    _useStateSyncing2 = _slicedToArray(_useStateSyncing, 2),
-    syncing = _useStateSyncing2[0],
-    setSyncing = _useStateSyncing2[1];
-  var _useStateStatus = useState(null),
-    _useStateStatus2 = _slicedToArray(_useStateStatus, 2),
-    statusMsg = _useStateStatus2[0],
-    setStatusMsg = _useStateStatus2[1];
+var SyncSettings = function SyncSettings() {
+  const [activeSubTab, setActiveSubTab] = useState('employees');
+  const [employeesText, setEmployeesText] = useState('');
+  const [needlesticksText, setNeedlesticksText] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(function () {
-    fetch('/api?action=getSyncSettings')
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        if (data.status === 'success' && data.sheetId) {
-          setSheetId(data.sheetId);
-        }
-      })
-      .catch(function(err) { console.error(err); });
-  }, []);
-
-  var handleSave = function handleSave() {
-    fetch('/api?action=saveSyncSettings&sheetId=' + encodeURIComponent(sheetId), { method: 'POST' })
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        if (data.status === 'success') {
-          Swal.fire({
-            icon: 'success',
-            title: 'تم الحفظ',
-            text: 'تم حفظ معرف جدول البيانات بنجاح',
-            confirmButtonText: 'حسناً',
-            confirmButtonColor: '#059669'
-          });
-        } else {
-          Swal.fire('خطأ', 'فشل حفظ الإعدادات', 'error');
-        }
-      })
-      .catch(function(err) { Swal.fire('خطأ', 'حدث خطأ في الاتصال بالسيرفر', 'error'); });
-  };
-
-  var handleSync = function handleSync() {
-    setSyncing(true);
-    setStatusMsg(null);
-    fetch('/api/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sheetId: sheetId })
-    })
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        setSyncing(false);
-        if (data.status === 'success') {
-          var details = data.data;
-          setStatusMsg({
-            type: 'success',
-            text: 'تمت المزامنة بنجاح! تم استيراد ' + (details.empCount || 0) + ' موظف و ' + (details.nsCount || 0) + ' استمارة وخز.'
-          });
-          Swal.fire({
-            icon: 'success',
-            title: 'تمت المزامنة بنجاح',
-            text: 'تم تحديث بيانات Turso من Google Sheets',
-            confirmButtonText: 'ممتاز',
-            confirmButtonColor: '#059669'
-          });
-        } else {
-          setStatusMsg({
-            type: 'error',
-            text: 'فشلت المزامنة: ' + data.message
-          });
-          Swal.fire('خطأ في المزامنة', data.message, 'error');
-        }
-      })
-      .catch(function(err) {
-        setSyncing(false);
-        setStatusMsg({
-          type: 'error',
-          text: 'حدث خطأ في الاتصال بالشبكة.'
+  // Parsed Employees
+  const parsedEmployees = [];
+  if (employeesText.trim()) {
+    const lines = employeesText.split(/\r?\n/);
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      let cells = line.split('\t');
+      if (cells.length === 1) {
+        if (line.includes(',')) cells = line.split(',');
+        else if (line.includes(';')) cells = line.split(';');
+      }
+      const cleaned = cells.map(c => c.trim().replace(/^["']|["']$/g, ''));
+      const nid = cleaned[0] || '';
+      if (nid && nid.toLowerCase() !== 'رقم البطاقة' && nid.toLowerCase() !== 'national id' && nid.toLowerCase() !== 'nationalid' && nid.toLowerCase() !== 'id') {
+        parsedEmployees.push({
+          nationalId: nid,
+          name: cleaned[1] || '',
+          category: cleaned[2] || '',
+          phone: cleaned[3] || '',
+          dose1: cleaned[4] || '',
+          dose2: cleaned[5] || '',
+          dose3: cleaned[6] || '',
+          notes: cleaned[7] || ''
         });
-        Swal.fire('خطأ', 'فشل الاتصال بالخادم', 'error');
-      });
+      }
+    }
+  }
+
+  // Parsed Needlesticks
+  const parsedNeedlesticks = [];
+  if (needlesticksText.trim()) {
+    const linesNs = needlesticksText.split(/\r?\n/);
+    for (let j = 0; j < linesNs.length; j++) {
+      const lineNs = linesNs[j].trim();
+      if (!lineNs) continue;
+      let cellsNs = lineNs.split('\t');
+      if (cellsNs.length === 1) {
+        if (lineNs.includes(',')) cellsNs = lineNs.split(',');
+        else if (lineNs.includes(';')) cellsNs = lineNs.split(';');
+      }
+      const cleanedNs = cellsNs.map(c => c.trim().replace(/^["']|["']$/g, ''));
+      const nid = cleanedNs[0] || '';
+      if (nid && nid.toLowerCase() !== 'رقم البطاقة' && nid.toLowerCase() !== 'national id' && nid.toLowerCase() !== 'nationalid' && nid.toLowerCase() !== 'id') {
+        parsedNeedlesticks.push({
+          nationalId: nid,
+          name: cleanedNs[1] || '',
+          date: cleanedNs[2] || '',
+          time: cleanedNs[3] || '',
+          location: cleanedNs[4] || '',
+          tool: cleanedNs[5] || '',
+          description: cleanedNs[6] || '',
+          vaccineStatus: cleanedNs[7] || '',
+          timestamp: cleanedNs[8] || ''
+        });
+      }
+    }
+  }
+
+  const handleImportEmployees = function() {
+    if (parsedEmployees.length === 0) {
+      Swal.fire('تنبيه', 'لا توجد بيانات صالحة للاستيراد. يرجى التأكد من لصق البيانات بشكل صحيح.', 'warning');
+      return;
+    }
+    
+    Swal.fire({
+      title: 'هل أنت متأكد؟',
+      text: 'سيتم حذف جميع الموظفين الحاليين واستبدالهم بـ ' + parsedEmployees.length + ' موظف جديد.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#059669',
+      cancelButtonColor: '#dc2626',
+      confirmButtonText: 'نعم، استورد الآن',
+      cancelButtonText: 'إلغاء'
+    }).then(function(result) {
+      if (result.isConfirmed) {
+        setIsSaving(true);
+        fetch('/api?action=importEmployees', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ employees: parsedEmployees })
+        })
+        .then(res => res.json())
+        .then(data => {
+          setIsSaving(false);
+          if (data.status === 'success') {
+            Swal.fire({
+              icon: 'success',
+              title: 'تم الاستيراد بنجاح',
+              text: data.message,
+              confirmButtonText: 'حسناً',
+              confirmButtonColor: '#059669'
+            });
+            setEmployeesText('');
+          } else {
+            Swal.fire('خطأ', data.message || 'فشل الاستيراد', 'error');
+          }
+        })
+        .catch(err => {
+          setIsSaving(false);
+          console.error(err);
+          Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+        });
+      }
+    });
   };
 
-  return /*#__PURE__*/React.createElement("div", { className: "space-y-6 animate-fadeIn text-right", dir: "rtl" },
-    /*#__PURE__*/React.createElement("div", { className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6" },
-      /*#__PURE__*/React.createElement("div", { className: "flex items-center gap-3 mb-6" },
-        /*#__PURE__*/React.createElement("div", { className: "bg-emerald-100 p-2.5 rounded-xl text-emerald-600" },
-          /*#__PURE__*/React.createElement("i", { className: "fas fa-rotate text-2xl" })
+  const handleImportNeedlesticks = function() {
+    if (parsedNeedlesticks.length === 0) {
+      Swal.fire('تنبيه', 'لا توجد بيانات صالحة للاستيراد. يرجى التأكد من لصق البيانات بشكل صحيح.', 'warning');
+      return;
+    }
+    
+    Swal.fire({
+      title: 'هل أنت متأكد؟',
+      text: 'سيتم حذف جميع سجلات حوادث الوخز الحالية واستبدالها بـ ' + parsedNeedlesticks.length + ' سجل جديد.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#059669',
+      cancelButtonColor: '#dc2626',
+      confirmButtonText: 'نعم، استورد الآن',
+      cancelButtonText: 'إلغاء'
+    }).then(function(result) {
+      if (result.isConfirmed) {
+        setIsSaving(true);
+        fetch('/api?action=importNeedlesticks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ needlesticks: parsedNeedlesticks })
+        })
+        .then(res => res.json())
+        .then(data => {
+          setIsSaving(false);
+          if (data.status === 'success') {
+            Swal.fire({
+              icon: 'success',
+              title: 'تم الاستيراد بنجاح',
+              text: data.message,
+              confirmButtonText: 'حسناً',
+              confirmButtonColor: '#059669'
+            });
+            setNeedlesticksText('');
+          } else {
+            Swal.fire('خطأ', data.message || 'فشل الاستيراد', 'error');
+          }
+        })
+        .catch(err => {
+          setIsSaving(false);
+          console.error(err);
+          Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
+        });
+      }
+    });
+  };
+
+  return React.createElement("div", { className: "space-y-6 animate-fadeIn text-right", dir: "rtl" },
+    React.createElement("div", { className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6" },
+      React.createElement("div", { className: "flex items-center gap-3 mb-6" },
+        React.createElement("div", { className: "bg-emerald-100 p-2.5 rounded-xl text-emerald-600" },
+          React.createElement("i", { className: "fas fa-paste text-2xl" })
         ),
-        /*#__PURE__*/React.createElement("h2", { className: "font-bold text-xl text-slate-800" }, "مزامنة البيانات مع Google Sheets")
+        React.createElement("h2", { className: "font-bold text-xl text-slate-800" }, "استيراد البيانات بالنسخ واللصق من Google Sheets / Excel")
       ),
-      /*#__PURE__*/React.createElement("p", { className: "text-slate-600 mb-6 text-sm leading-relaxed font-semibold" }, 
-        "يتيح لك هذا القسم ربط التطبيق بجدول بيانات Google (Google Sheet) لمزامنة قائمة الموظفين واستمارات الوخز تلقائياً مع قاعدة بيانات Turso."
+      React.createElement("p", { className: "text-slate-600 mb-6 text-sm leading-relaxed font-semibold" },
+        "يمكنك الآن استيراد البيانات بسهولة دون الحاجة لتغيير إعدادات مشاركة الرابط أو مواجهة مشاكل الاتصال. فقط انسخ الخلايا من جدول البيانات (Google Sheets أو Excel) والصقها هنا مباشرة لتحديث قاعدة البيانات."
       ),
-      /*#__PURE__*/React.createElement("div", { className: "space-y-4" },
-        /*#__PURE__*/React.createElement("div", null,
-          /*#__PURE__*/React.createElement("label", { className: "block text-sm font-bold text-slate-700 mb-2" }, "معرف جدول بيانات جوجل (Google Sheet ID)"),
-          /*#__PURE__*/React.createElement("input", {
-            type: "text",
-            value: sheetId,
-            onChange: function(e) { setSheetId(e.target.value); },
-            placeholder: "أدخل معرف الجدول (مثال: 1aBcDeFgHiJkLmNoPqRsTuVwXyZ)",
-            className: "block w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 bg-white font-mono text-sm"
-          })
+      React.createElement("div", { className: "flex border-b border-slate-200 mb-6" },
+        React.createElement("button", {
+          onClick: function() { setActiveSubTab('employees'); },
+          className: "px-6 py-3 font-bold text-sm border-b-2 transition-colors " + (activeSubTab === 'employees' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800')
+        }, "1. جدول الموظفين (vaccine_employees)"),
+        React.createElement("button", {
+          onClick: function() { setActiveSubTab('needlesticks'); },
+          className: "px-6 py-3 font-bold text-sm border-b-2 transition-colors " + (activeSubTab === 'needlesticks' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800')
+        }, "2. جدول حوادث الوخز (vaccine_needlesticks)")
+      ),
+      activeSubTab === 'employees' ? React.createElement("div", { className: "space-y-4" },
+        React.createElement("div", { className: "bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-800 text-sm leading-relaxed font-medium" },
+          React.createElement("i", { className: "fas fa-info-circle ml-2" }),
+          "الترتيب المطلوب للأعمدة من اليمين إلى اليسار (أو من اليسار لليمين):",
+          React.createElement("strong", null, " رقم البطاقة، الاسم، الفئة، رقم التليفون، الجرعة الأولى، الجرعة الثانية، الجرعة الثالثة، ملاحظات.")
         ),
-        /*#__PURE__*/React.createElement("div", { className: "flex flex-wrap gap-3 pt-2" },
-          /*#__PURE__*/React.createElement("button", {
-            onClick: handleSave,
-            className: "bg-slate-700 hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
-          }, /*#__PURE__*/React.createElement("i", { className: "fas fa-save" }), "حفظ المعرف"),
-          /*#__PURE__*/React.createElement("button", {
-            onClick: handleSync,
-            disabled: syncing,
-            className: "bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
-          }, /*#__PURE__*/React.createElement("i", { className: "fas " + (syncing ? "fa-spinner fa-spin" : "fa-rotate") }), syncing ? "جاري المزامنة..." : "ابدأ المزامنة الآن")
+        React.createElement("textarea", {
+          rows: 8,
+          value: employeesText,
+          onChange: function(e) { setEmployeesText(e.target.value); },
+          placeholder: "قم بنسخ الخلايا من Google Sheets (الصفوف والأعمدة) ثم الصقها هنا...",
+          className: "block w-full px-4 py-3 border border-slate-300 rounded-2xl focus:ring-emerald-500 focus:border-emerald-500 bg-slate-50 font-mono text-xs text-left",
+          dir: "ltr"
+        }),
+        parsedEmployees.length > 0 && React.createElement("div", { className: "bg-slate-50 rounded-2xl p-4 border border-slate-200" },
+          React.createElement("h3", { className: "font-bold text-sm text-slate-700 mb-3" }, "معاينة البيانات المكتشفة (" + parsedEmployees.length + " موظف):"),
+          React.createElement("div", { className: "overflow-x-auto rounded-xl border border-slate-200" },
+            React.createElement("table", { className: "min-w-full divide-y divide-slate-200 text-sm text-right" },
+              React.createElement("thead", { className: "bg-slate-100 text-slate-700 font-bold" },
+                React.createElement("tr", null,
+                  React.createElement("th", { className: "px-4 py-2" }, "رقم البطاقة"),
+                  React.createElement("th", { className: "px-4 py-2" }, "الاسم"),
+                  React.createElement("th", { className: "px-4 py-2" }, "الفئة"),
+                  React.createElement("th", { className: "px-4 py-2" }, "الجرعة 1"),
+                  React.createElement("th", { className: "px-4 py-2" }, "الجرعة 2"),
+                  React.createElement("th", { className: "px-4 py-2" }, "الجرعة 3")
+                )
+              ),
+              React.createElement("tbody", { className: "divide-y divide-slate-200 text-slate-600 font-semibold bg-white" },
+                parsedEmployees.slice(0, 5).map(function(emp, idx) {
+                  return React.createElement("tr", { key: idx },
+                    React.createElement("td", { className: "px-4 py-2 font-mono text-xs" }, emp.nationalId),
+                    React.createElement("td", { className: "px-4 py-2" }, emp.name),
+                    React.createElement("td", { className: "px-4 py-2" }, emp.category),
+                    React.createElement("td", { className: "px-4 py-2" }, emp.dose1 || "-"),
+                    React.createElement("td", { className: "px-4 py-2" }, emp.dose2 || "-"),
+                    React.createElement("td", { className: "px-4 py-2" }, emp.dose3 || "-")
+                  );
+                }),
+                parsedEmployees.length > 5 && React.createElement("tr", null,
+                  React.createElement("td", { colSpan: 6, className: "px-4 py-2 text-center text-xs text-slate-400 font-bold" }, "...و " + (parsedEmployees.length - 5) + " موظف آخرين ...")
+                )
+              )
+            )
+          )
+        ),
+        React.createElement("div", { className: "pt-2" },
+          React.createElement("button", {
+            onClick: handleImportEmployees,
+            disabled: isSaving || parsedEmployees.length === 0,
+            className: "bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-8 py-3 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
+          }, React.createElement("i", { className: "fas fa-cloud-upload-alt" }), isSaving ? "جاري الاستيراد..." : "حفظ الموظفين في قاعدة البيانات")
         )
-      ),
-      statusMsg && /*#__PURE__*/React.createElement("div", {
-        className: "mt-6 p-4 rounded-xl border " + (statusMsg.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800')
-      },
-        /*#__PURE__*/React.createElement("div", { className: "flex items-start gap-2.5" },
-          /*#__PURE__*/React.createElement("i", { className: "fas " + (statusMsg.type === 'success' ? "fa-check-circle text-emerald-500" : "fa-exclamation-circle text-rose-500") + " mt-0.5" }),
-          /*#__PURE__*/React.createElement("p", { className: "text-sm font-bold" }, statusMsg.text)
+      ) : React.createElement("div", { className: "space-y-4" },
+        React.createElement("div", { className: "bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-800 text-sm leading-relaxed font-medium" },
+          React.createElement("i", { className: "fas fa-info-circle ml-2" }),
+          "الترتيب المطلوب للأعمدة من اليمين إلى اليسار (أو من اليسار لليمين):",
+          React.createElement("strong", null, " رقم البطاقة، الاسم، التاريخ، الوقت، مكان الإصابة، الأداة المستخدمة، التفاصيل، حالة التطعيم، طابع زمني.")
+        ),
+        React.createElement("textarea", {
+          rows: 8,
+          value: needlesticksText,
+          onChange: function(e) { setNeedlesticksText(e.target.value); },
+          placeholder: "قم بنسخ الخلايا من Google Sheets (الصفوف والأعمدة) ثم الصقها هنا...",
+          className: "block w-full px-4 py-3 border border-slate-300 rounded-2xl focus:ring-emerald-500 focus:border-emerald-500 bg-slate-50 font-mono text-xs text-left",
+          dir: "ltr"
+        }),
+        parsedNeedlesticks.length > 0 && React.createElement("div", { className: "bg-slate-50 rounded-2xl p-4 border border-slate-200" },
+          React.createElement("h3", { className: "font-bold text-sm text-slate-700 mb-3" }, "معاينة سجلات الوخز المكتشفة (" + parsedNeedlesticks.length + " سجل):"),
+          React.createElement("div", { className: "overflow-x-auto rounded-xl border border-slate-200" },
+            React.createElement("table", { className: "min-w-full divide-y divide-slate-200 text-sm text-right" },
+              React.createElement("thead", { className: "bg-slate-100 text-slate-700 font-bold" },
+                React.createElement("tr", null,
+                  React.createElement("th", { className: "px-4 py-2" }, "رقم البطاقة"),
+                  React.createElement("th", { className: "px-4 py-2" }, "الاسم"),
+                  React.createElement("th", { className: "px-4 py-2" }, "التاريخ"),
+                  React.createElement("th", { className: "px-4 py-2" }, "مكان الإصابة"),
+                  React.createElement("th", { className: "px-4 py-2" }, "الأداة"),
+                  React.createElement("th", { className: "px-4 py-2" }, "الحالة التطعيمية")
+                )
+              ),
+              React.createElement("tbody", { className: "divide-y divide-slate-200 text-slate-600 font-semibold bg-white" },
+                parsedNeedlesticks.slice(0, 5).map(function(ns, idx) {
+                  return React.createElement("tr", { key: idx },
+                    React.createElement("td", { className: "px-4 py-2 font-mono text-xs" }, ns.nationalId),
+                    React.createElement("td", { className: "px-4 py-2" }, ns.name),
+                    React.createElement("td", { className: "px-4 py-2" }, ns.date),
+                    React.createElement("td", { className: "px-4 py-2" }, ns.location),
+                    React.createElement("td", { className: "px-4 py-2" }, ns.tool),
+                    React.createElement("td", { className: "px-4 py-2" }, ns.vaccineStatus)
+                  );
+                }),
+                parsedNeedlesticks.length > 5 && React.createElement("tr", null,
+                  React.createElement("td", { colSpan: 6, className: "px-4 py-2 text-center text-xs text-slate-400 font-bold" }, "...و " + (parsedNeedlesticks.length - 5) + " سجل آخرين ...")
+                )
+              )
+            )
+          )
+        ),
+        React.createElement("div", { className: "pt-2" },
+          React.createElement("button", {
+            onClick: handleImportNeedlesticks,
+            disabled: isSaving || parsedNeedlesticks.length === 0,
+            className: "bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-8 py-3 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
+          }, React.createElement("i", { className: "fas fa-cloud-upload-alt" }), isSaving ? "جاري الاستيراد..." : "حفظ سجلات الوخز في قاعدة البيانات")
         )
       )
     ),
-    /*#__PURE__*/React.createElement("div", { className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6" },
-      /*#__PURE__*/React.createElement("h3", { className: "font-bold text-lg text-slate-800 mb-4" }, "تعليمات إعداد جدول بيانات جوجل:"),
-      /*#__PURE__*/React.createElement("ol", { className: "list-decimal list-inside space-y-3 text-slate-600 text-sm leading-relaxed text-right font-medium", dir: "rtl" },
-        /*#__PURE__*/React.createElement("li", null, "قم بإنشاء جدول بيانات جديد على Google Sheets."),
-        /*#__PURE__*/React.createElement("li", null, "قم بتسمية الورقة الأولى (Tab 1) باسم ", /*#__PURE__*/React.createElement("strong", { className: "text-emerald-600 font-bold" }, "vaccine_employees"), " والورقة الثانية (Tab 2) باسم ", /*#__PURE__*/React.createElement("strong", { className: "text-emerald-600 font-bold" }, "vaccine_needlesticks"), "."),
-        /*#__PURE__*/React.createElement("li", null, "تأكد من ترتيب الأعمدة في الصف الأول (الرأس) كالآتي:",
-          /*#__PURE__*/React.createElement("ul", { className: "list-disc list-inside mr-6 mt-1 space-y-1 text-xs text-slate-500 font-bold" },
-            /*#__PURE__*/React.createElement("li", null, "جدول الموظفين: [رقم البطاقة، الاسم، الفئة، رقم التليفون، الجرعة الأولى، الجرعة الثانية، الجرعة الثالثة، ملاحظات]"),
-            /*#__PURE__*/React.createElement("li", null, "جدول الوخز: [رقم البطاقة، الاسم، التاريخ، الوقت، مكان الإصابة، الأداة المستخدمة، التفاصيل، حالة التطعيم، طابع زمني]")
-          )
-        ),
-        /*#__PURE__*/React.createElement("li", null, "اضغط على زر المشاركة (Share) في أعلى اليسار بـ Google Sheets."),
-        /*#__PURE__*/React.createElement("li", null, "قم بتغيير صلاحية الوصول العام إلى ", /*#__PURE__*/React.createElement("strong", { className: "font-bold" }, "أى شخص لديه الرابط يمكنه العرض (Anyone with the link can view)"), "."),
-        /*#__PURE__*/React.createElement("li", null, "انسخ معرف الجدول من شريط العنوان (الرابط) - وهو الجزء الطويل المكون من حروف وأرقام بين ", /*#__PURE__*/React.createElement("code", { className: "bg-slate-100 px-1.5 py-0.5 rounded font-mono text-xs border border-slate-200" }, "/d/"), " و ", /*#__PURE__*/React.createElement("code", { className: "bg-slate-100 px-1.5 py-0.5 rounded font-mono text-xs border border-slate-200" }, "/edit"), "."),
-        /*#__PURE__*/React.createElement("li", null, "ضع المعرف في الحقل أعلاه واضغط حفظ ثم مزامنة!")
+    React.createElement("div", { className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6" },
+      React.createElement("h3", { className: "font-bold text-lg text-slate-800 mb-4 flex items-center gap-2" },
+        React.createElement("i", { className: "fas fa-question-circle text-emerald-600" }),
+        "خطوات نسخ ولصق البيانات بالتفصيل:"
+      ),
+      React.createElement("ol", { className: "list-decimal list-inside space-y-3 text-slate-600 text-sm leading-relaxed text-right font-semibold", dir: "rtl" },
+        React.createElement("li", null, "افتح ملف الـ Google Sheets أو Excel الخاص بك."),
+        React.createElement("li", null, "انتقل لـ ورقة العمل الأولى (مثلا: vaccine_employees)."),
+        React.createElement("li", null, "قم بتحديد كامل البيانات (بما فيها الصف الأول للعناوين) بالضغط على زر المربع فارغ الزاوية، أو بتحديد الخلايا يدوياً."),
+        React.createElement("li", null, "انسخ الخلايا بالضغط على ", React.createElement("kbd", { className: "bg-slate-100 px-1.5 py-0.5 rounded border border-slate-300 font-bold text-xs" }, "Ctrl + C")),
+        React.createElement("li", null, "عد هنا واختبر التبويب المناسب، ثم اضغط بالماوس داخل المربع الكبير والصق بالضغط على ", React.createElement("kbd", { className: "bg-slate-100 px-1.5 py-0.5 rounded border border-slate-300 font-bold text-xs" }, "Ctrl + V")),
+        React.createElement("li", null, "تأكد من المعاينة التلقائية أنها تظهر الأسماء والبيانات بشكل صحيح في الجدول الأسفل."),
+        React.createElement("li", null, "اضغط على زر الحفظ باللون الأخضر لحفظ وتثبيت البيانات بضغطة واحدة!")
       )
     )
   );

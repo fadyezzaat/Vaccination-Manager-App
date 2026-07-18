@@ -138,6 +138,69 @@ app.all("/api", async (req, res) => {
       });
       res.json({ status: "success", message: "Employee deleted" });
     }
+    else if (action === "importEmployees") {
+      const employeesArray = typeof params.employees === "string" ? JSON.parse(params.employees) : params.employees;
+      if (!employeesArray || !Array.isArray(employeesArray)) {
+        res.json({ status: "error", message: "بيانات الموظفين غير صالحة" });
+        return;
+      }
+      
+      // Clear existing first
+      await db.execute("DELETE FROM vaccine_employees");
+      
+      let insertedCount = 0;
+      for (const emp of employeesArray) {
+        const nationalId = String(emp.nationalId || "").trim();
+        if (!nationalId) continue;
+        await db.execute({
+          sql: "INSERT INTO vaccine_employees (nationalId, name, category, phone, dose1, dose2, dose3, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          args: [
+            nationalId,
+            String(emp.name || "").trim(),
+            String(emp.category || "").trim(),
+            String(emp.phone || "").trim(),
+            String(emp.dose1 || "").trim(),
+            String(emp.dose2 || "").trim(),
+            String(emp.dose3 || "").trim(),
+            String(emp.notes || "").trim()
+          ]
+        });
+        insertedCount++;
+      }
+      res.json({ status: "success", message: `تم استيراد ${insertedCount} موظف بنجاح`, count: insertedCount });
+    }
+    else if (action === "importNeedlesticks") {
+      const needlesticksArray = typeof params.needlesticks === "string" ? JSON.parse(params.needlesticks) : params.needlesticks;
+      if (!needlesticksArray || !Array.isArray(needlesticksArray)) {
+        res.json({ status: "error", message: "بيانات حوادث الوخز غير صالحة" });
+        return;
+      }
+      
+      // Clear existing first
+      await db.execute("DELETE FROM vaccine_needlesticks");
+      
+      let insertedCount = 0;
+      for (const ns of needlesticksArray) {
+        const nationalId = String(ns.nationalId || "").trim();
+        if (!nationalId) continue;
+        await db.execute({
+          sql: "INSERT INTO vaccine_needlesticks (nationalId, name, date, time, location, tool, description, vaccineStatus, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+          args: [
+            nationalId,
+            String(ns.name || "").trim(),
+            String(ns.date || "").trim(),
+            String(ns.time || "").trim(),
+            String(ns.location || "").trim(),
+            String(ns.tool || "").trim(),
+            String(ns.description || "").trim(),
+            String(ns.vaccineStatus || "").trim(),
+            String(ns.timestamp || "").trim()
+          ]
+        });
+        insertedCount++;
+      }
+      res.json({ status: "success", message: `تم استيراد ${insertedCount} استمارة وخز بنجاح`, count: insertedCount });
+    }
     else if (action === "saveNeedlestick") {
       const timestamp = new Date().toISOString();
       await db.execute({
