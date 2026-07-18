@@ -78,26 +78,32 @@ export async function syncGoogleSheets(customSheetId?: string) {
 
     await db.execute("DELETE FROM vaccine_employees");
 
-    let empCount = 0;
+    // Deduplicate by nationalId, keeping the last occurrence
+    const dedupedMap = new Map<string, any>();
     for (const row of empRecords) {
       const keys = Object.keys(row);
       if (keys.length === 0) continue;
       const nationalId = keys[0] ? String(row[keys[0]] || "").trim() : "";
-      const name = keys[1] ? String(row[keys[1]] || "").trim() : "";
-      const category = keys[2] ? String(row[keys[2]] || "").trim() : "";
-      const phone = keys[3] ? String(row[keys[3]] || "").trim() : "";
-      const dose1 = keys[4] ? String(row[keys[4]] || "").trim() : "";
-      const dose2 = keys[5] ? String(row[keys[5]] || "").trim() : "";
-      const dose3 = keys[6] ? String(row[keys[6]] || "").trim() : "";
-      const notes = keys[7] ? String(row[keys[7]] || "").trim() : "";
-
       if (nationalId && nationalId !== 'رقم البطاقة' && nationalId !== 'National ID') {
-        await db.execute({
-          sql: "INSERT INTO vaccine_employees (nationalId, name, category, phone, dose1, dose2, dose3, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-          args: [nationalId, name, category, phone, dose1, dose2, dose3, notes]
-        });
-        empCount++;
+        const name = keys[1] ? String(row[keys[1]] || "").trim() : "";
+        const category = keys[2] ? String(row[keys[2]] || "").trim() : "";
+        const phone = keys[3] ? String(row[keys[3]] || "").trim() : "";
+        const dose1 = keys[4] ? String(row[keys[4]] || "").trim() : "";
+        const dose2 = keys[5] ? String(row[keys[5]] || "").trim() : "";
+        const dose3 = keys[6] ? String(row[keys[6]] || "").trim() : "";
+        const notes = keys[7] ? String(row[keys[7]] || "").trim() : "";
+        
+        dedupedMap.set(nationalId, { name, category, phone, dose1, dose2, dose3, notes });
       }
+    }
+
+    let empCount = 0;
+    for (const [nationalId, emp] of dedupedMap.entries()) {
+      await db.execute({
+        sql: "INSERT OR REPLACE INTO vaccine_employees (nationalId, name, category, phone, dose1, dose2, dose3, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        args: [nationalId, emp.name, emp.category, emp.phone, emp.dose1, emp.dose2, emp.dose3, emp.notes]
+      });
+      empCount++;
     }
     console.log(`Synced ${empCount} records into vaccine_employees.`);
 

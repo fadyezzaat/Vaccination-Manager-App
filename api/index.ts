@@ -177,12 +177,19 @@ app.all("/api", async (req, res) => {
       // Clear existing first
       await db.execute("DELETE FROM vaccine_employees");
       
-      let insertedCount = 0;
+      // Deduplicate by nationalId, keeping the last occurrence
+      const dedupedMap = new Map<string, any>();
       for (const emp of employeesArray) {
         const nationalId = String(emp.nationalId || "").trim();
-        if (!nationalId) continue;
+        if (nationalId) {
+          dedupedMap.set(nationalId, emp);
+        }
+      }
+      
+      let insertedCount = 0;
+      for (const [nationalId, emp] of dedupedMap.entries()) {
         await db.execute({
-          sql: "INSERT INTO vaccine_employees (nationalId, name, category, phone, dose1, dose2, dose3, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          sql: "INSERT OR REPLACE INTO vaccine_employees (nationalId, name, category, phone, dose1, dose2, dose3, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
           args: [
             nationalId,
             String(emp.name || "").trim(),
