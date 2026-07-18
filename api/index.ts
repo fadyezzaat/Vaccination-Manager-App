@@ -3,7 +3,7 @@ import express from "express";
 import path from "path";
 import { db, createTables, createInfectionTable } from "../src/lib/db.js";
 import { parse } from "csv-parse/sync";
-import { syncGoogleSheets } from "../sync.js";
+import { syncGoogleSheets, extractSheetId } from "../sync.js";
 
 export const app = express();
 
@@ -30,13 +30,14 @@ app.post("/api/sync", async (req, res) => {
   try {
     await ensureDbInitialized();
     const { sheetId } = req.body || {};
-    if (sheetId) {
+    const cleanId = extractSheetId(sheetId || "");
+    if (cleanId) {
       await db.execute({
         sql: "INSERT OR REPLACE INTO vaccine_settings (key, value) VALUES ('sheet_id', ?)",
-        args: [sheetId]
+        args: [cleanId]
       });
     }
-    const result = await syncGoogleSheets(sheetId);
+    const result = await syncGoogleSheets(cleanId);
     res.json({ status: "success", message: "Synced successfully from Google Sheets", data: result });
   } catch (err: any) {
     res.json({ status: "error", message: err.message });
@@ -159,9 +160,10 @@ app.all("/api", async (req, res) => {
     }
     else if (action === "saveSyncSettings") {
       const { sheetId } = params;
+      const cleanId = extractSheetId(sheetId || "");
       await db.execute({
         sql: "INSERT OR REPLACE INTO vaccine_settings (key, value) VALUES ('sheet_id', ?)",
-        args: [sheetId || ""]
+        args: [cleanId]
       });
       res.json({ status: "success", message: "Settings saved successfully" });
     }

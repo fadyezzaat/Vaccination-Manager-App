@@ -1,30 +1,44 @@
 import { db } from "./src/lib/db.js";
 import { parse } from "csv-parse/sync";
 
+export function extractSheetId(input: string): string {
+  if (!input) return "";
+  const trimmed = input.trim();
+  // Support standard google sheets URL extraction:
+  // e.g. https://docs.google.com/spreadsheets/d/1_9vM-3xZ2YJcM-P9K8u_vU_vP_p3/edit#gid=0
+  const match = trimmed.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (match && match[1]) {
+    return match[1];
+  }
+  return trimmed;
+}
+
 export async function syncGoogleSheets(customSheetId?: string) {
-  let sheetId = process.env.VITE_SHEET_ID;
+  let rawSheetId = process.env.VITE_SHEET_ID || "";
   
-  if (!sheetId) {
-    sheetId = customSheetId;
+  if (!rawSheetId) {
+    rawSheetId = customSheetId || "";
   }
   
-  if (!sheetId) {
+  if (!rawSheetId) {
     try {
       const result = await db.execute({
         sql: "SELECT value FROM vaccine_settings WHERE key = 'sheet_id'",
         args: []
       });
       if (result.rows.length > 0 && result.rows[0].value) {
-        sheetId = result.rows[0].value as string;
+        rawSheetId = result.rows[0].value as string;
       }
     } catch (e) {
       console.error("Error reading sheet_id from db:", e);
     }
   }
 
+  const sheetId = extractSheetId(rawSheetId);
+
   if (!sheetId) {
     console.log("VITE_SHEET_ID is not configured and no custom sheet_id provided. Skipping sync.");
-    throw new Error("معرف جدول بيانات جوجل (Google Sheet ID) غير مهيأ. يرجى تهيئته أولاً.");
+    throw new Error("معرف جدول بيانات جوجل (Google Sheet ID) غير مهيأ. يرجى تهيئته أولاً أو إدخال معرف/رابط صحيح.");
   }
 
   console.log(`Starting sync from Google Sheets (${sheetId}) to Turso...`);
@@ -35,6 +49,18 @@ export async function syncGoogleSheets(customSheetId?: string) {
     const empResponse = await fetch(employeesUrl);
     
     if (!empResponse.ok) {
+      if (empResponse.status === 401) {
+        throw new Error(
+          "فشل الاتصال بجدول البيانات (كود الاستجابة: 401 - غير مصرح).\n\n" +
+          "السبب: جدول بيانات Google الخاص بك مغلق (حصري/Private).\n\n" +
+          "الحل للتشغيل والمزامنة:\n" +
+          "1. افتح ملف الـ Google Sheets الخاص بك.\n" +
+          "2. اضغط على زر 'مشاركة' (Share) في أعلى اليسار.\n" +
+          "3. تحت 'الوصول العام' (General Access)، قم بتغيير الاختيار من 'حصري' (Restricted) إلى 'أي شخص لديه الرابط' (Anyone with the link).\n" +
+          "4. تأكد من ضبط الصلاحية على 'عارض' (Viewer).\n" +
+          "5. اضغط 'حفظ' أو 'تم' (Done) وحاول المزامنة مجدداً."
+        );
+      }
       throw new Error(`فشل الاتصال بجدول البيانات (كود الاستجابة: ${empResponse.status}). تأكد من إعدادات مشاركة الجدول.`);
     }
 
