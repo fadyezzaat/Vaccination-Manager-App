@@ -1225,7 +1225,7 @@ var App = function App() {
             case 5:
               _context1.p = 5;
               _t4 = _context1.v;
-              console.error("Fetch Error:", data); Swal.fire('خطأ', 'فشل تحميل قائمة العاملين: ' + (data ? JSON.stringify(data) : "Network Error"), 'error');
+              console.error("Fetch Error:", _t4); Swal.fire('خطأ', 'فشل تحميل قائمة العاملين: ' + (_t4 ? _t4.message || String(_t4) : "Network Error"), 'error');
             case 6:
               _context1.p = 6;
               setIsLoading(false);

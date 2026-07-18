@@ -1,6 +1,8 @@
 import { createClient } from "@libsql/client";
 
-const url = process.env.TURSO_DATABASE_URL || "file:local.db";
+const isVercel = process.env.VERCEL === "1" || !!process.env.VERCEL;
+const defaultDbPath = isVercel ? "file:/tmp/local.db" : "file:local.db";
+const url = process.env.TURSO_DATABASE_URL || defaultDbPath;
 const authToken = process.env.TURSO_AUTH_TOKEN;
 
 export const db = createClient({
