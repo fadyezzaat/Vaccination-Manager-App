@@ -1638,7 +1638,7 @@ var Stats = function Stats(_refX) {
       return 'admin';
     }
     
-    // عمال المستشفى
+    // عمال شركة النظافة
     if (cat.includes('عامل') || cat.includes('خدمات') || cat.includes('معاون') || cat.includes('نظاف') || cat.includes('سائق') || cat.includes('حرفي') || cat.includes('صيانة') || cat.includes('مطبخ') || cat.includes('غسيل') || cat.includes('سواق') || cat.includes('حارس') || cat.includes('مغسلة') || cat.includes('بوفيه') || cat.includes('كهربائي') || cat.includes('سباك') || cat.includes('نجار')) {
       return 'workers';
     }
@@ -1717,7 +1717,7 @@ var Stats = function Stats(_refX) {
   var getGroupLabel = function getGroupLabel(g) {
     if (g === 'medical') return 'الطاقم الطبي';
     if (g === 'admin') return 'الإداريين';
-    if (g === 'workers') return 'عمال المستشفى';
+    if (g === 'workers') return 'عمال شركة النظافة';
     return 'فئات أخرى غير مصنفة';
   };
 
@@ -1867,7 +1867,7 @@ var Stats = function Stats(_refX) {
             },
               React.createElement("td", { className: "px-4 py-3.5 flex items-center gap-2 font-bold text-slate-950 text-right" },
                 React.createElement("i", { className: "fas fa-hands-helping text-amber-500 w-5" }),
-                "عمال المستشفى",
+                "عمال شركة النظافة",
                 React.createElement("span", { className: "text-xs text-slate-400 font-normal no-print" }, " (انقر للتفاصيل)")
               ),
               React.createElement("td", { className: "px-4 py-3.5 text-center font-bold text-slate-900" }, statsWorkers.total),
@@ -2069,7 +2069,7 @@ var Stats = function Stats(_refX) {
         React.createElement("div", { className: "bg-amber-50/40 rounded-2xl p-4.5 border border-amber-100" },
           React.createElement("div", { className: "flex items-center gap-2 font-bold text-amber-900 mb-3" },
             React.createElement("i", { className: "fas fa-hands-helping text-amber-600" }),
-            "مجموعات عمال المستشفى (" + grouped.workers.length + " موظف)"
+            "مجموعات عمال شركة النظافة (" + grouped.workers.length + " موظف)"
           ),
           React.createElement("div", { className: "flex flex-wrap gap-1.5" },
             _toConsumableArray(new Set(grouped.workers.map(function(e){return e.category;}).filter(Boolean))).map(function(cat, i){
