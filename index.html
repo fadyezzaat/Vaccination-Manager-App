@@ -2294,14 +2294,26 @@ var Schedule = function Schedule(_refS) {
 
       if (!emp.dose1 || emp.dose1.toString().trim() === '') return;
 
-      var d1Str = emp.dose1.toString();
+      var d1Str = emp.dose1.toString().trim();
       if (d1Str.includes('T')) d1Str = d1Str.split('T')[0];
-      var d1Parts = d1Str.split('-');
+      var unifiedDate = d1Str.replace(/\//g, '-');
+      var d1Parts = unifiedDate.split('-');
       if (d1Parts.length !== 3) return;
 
-      var y = parseInt(d1Parts[0], 10);
-      var m = parseInt(d1Parts[1], 10);
-      var d = parseInt(d1Parts[2], 10);
+      var y, m, d;
+      if (d1Parts[0].length === 4) {
+        y = parseInt(d1Parts[0], 10);
+        m = parseInt(d1Parts[1], 10);
+        d = parseInt(d1Parts[2], 10);
+      } else if (d1Parts[2].length === 4) {
+        d = parseInt(d1Parts[0], 10);
+        m = parseInt(d1Parts[1], 10);
+        y = parseInt(d1Parts[2], 10);
+      } else {
+        return;
+      }
+
+      if (isNaN(y) || isNaN(m) || isNaN(d) || y < 1900 || m < 1 || m > 12 || d < 1 || d > 31) return;
 
       var dose1Date = new Date(y, m - 1, d);
 
@@ -2528,7 +2540,7 @@ var Schedule = function Schedule(_refS) {
       React.createElement("div", { className: "bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4" },
         React.createElement("div", { className: "bg-rose-50 text-rose-600 p-3 rounded-xl" }, React.createElement("i", { className: "fas fa-exclamation-circle text-lg" })),
         React.createElement("div", { className: "text-right" },
-          React.createElement("div", { className: "text-xs text-slate-400 font-bold" }, "\u0645\u062A\u0623\u062E\u0631\u064A\u0645"),
+          React.createElement("div", { className: "text-xs text-slate-400 font-bold" }, "\u0645\u062A\u0623\u062E\u0631\u064A\u0646"),
           React.createElement("div", { className: "text-xl font-black text-rose-600" }, stats.overdue)
         )
       ),
