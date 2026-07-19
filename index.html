@@ -113,6 +113,10 @@ var Layout = function Layout(_ref) {
     icon: 'fa-syringe',
     label: 'التطعيمات'
   }, {
+    id: 'stats',
+    icon: 'fa-chart-pie',
+    label: 'احصائية التطعيمات'
+  }, {
     id: 'sync_settings',
     icon: 'fa-rotate',
     label: 'المزامنة والإعدادات'
@@ -1209,6 +1213,8 @@ var App = function App() {
     className: "text-slate-800 font-bold text-lg"
   }, "\u062C\u0627\u0631\u064A \u0645\u0639\u0627\u0644\u062C\u0629 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A..."))), currentTab === 'vaccinations' && /*#__PURE__*/React.createElement(Vaccinations, {
     api: api
+  }), currentTab === 'stats' && /*#__PURE__*/React.createElement(Stats, {
+    api: api
   }), currentTab === 'sync_settings' && /*#__PURE__*/React.createElement(SyncSettings, {
     api: api
   }));
@@ -1559,6 +1565,530 @@ var SyncSettings = function SyncSettings() {
           }, React.createElement("i", { className: "fas fa-cloud-upload-alt" }), isSaving ? "جاري الاستيراد..." : "حفظ الموظفين في قاعدة البيانات")
         )
       )
+    )
+  );
+};
+
+// ==========================================
+// مكون إحصائيات التطعيمات (Stats Component)
+// ==========================================
+var Stats = function Stats(_refX) {
+  var api = _refX.api;
+  var _useStateX1 = useState([]),
+    _useStateX2 = _slicedToArray(_useStateX1, 2),
+    employees = _useStateX2[0],
+    setEmployees = _useStateX2[1];
+  var _useStateX3 = useState(null),
+    _useStateX4 = _slicedToArray(_useStateX3, 2),
+    activeTabGroup = _useStateX4[0],
+    setActiveTabGroup = _useStateX4[1]; // 'medical', 'admin', 'workers', 'others' or null
+  var _useStateX5 = useState('all'),
+    _useStateX6 = _slicedToArray(_useStateX5, 2),
+    drilldownFilter = _useStateX6[0],
+    setDrilldownFilter = _useStateX6[1]; // 'all', 'missing_dose1', 'missing_dose2', 'missing_dose3', 'refused'
+
+  var loadStatsData = function loadStatsData() {
+    api.loadEmployees().then(function (data) {
+      if (data) {
+        setEmployees(data);
+      }
+    });
+  };
+
+  useEffect(function () {
+    loadStatsData();
+  }, []);
+
+  // Helper functions to check vaccination status
+  var hasDose1 = function hasDose1(emp) {
+    if (emp.dose1 && emp.dose1.trim() !== '') return true;
+    var notes = (emp.notes || '').toLowerCase();
+    return notes.includes('تلقى جميع الجرعات') || notes.includes('تلقى الجرعة الأولى') || notes.includes('تلقى الجرعه الاولى') || notes.includes('تم التطعيم خارج') || notes.includes('تلقى الجرعات خارج');
+  };
+
+  var hasDose2 = function hasDose2(emp) {
+    if (emp.dose2 && emp.dose2.trim() !== '') return true;
+    var notes = (emp.notes || '').toLowerCase();
+    return notes.includes('تلقى جميع الجرعات') || notes.includes('تلقى الجرعة الثانية') || notes.includes('تلقى الجرعه الثانيه') || notes.includes('تلقى الجرعات خارج');
+  };
+
+  var hasDose3 = function hasDose3(emp) {
+    if (emp.dose3 && emp.dose3.trim() !== '') return true;
+    var notes = (emp.notes || '').toLowerCase();
+    return notes.includes('تلقى جميع الجرعات') || notes.includes('تلقى الجرعة الثالثة') || notes.includes('تلقى الجرعه الثالثه') || notes.includes('تلقى الجرعات خارج');
+  };
+
+  var isRefused = function isRefused(emp) {
+    var notes = (emp.notes || '').toLowerCase();
+    return notes.includes('رافض') || notes.includes('رفض');
+  };
+
+  // Classify each employee category
+  var classifyEmployee = function classifyEmployee(emp) {
+    var cat = (emp.category || '').trim().toLowerCase();
+    if (!cat) return 'others';
+    
+    // الطاقم الطبي
+    if (cat.includes('طبيب') || cat.includes('أطباء') || cat.includes('دكتور') || cat.includes('تمريض') || cat.includes('ممرض') || cat.includes('ممرضة') || cat.includes('صيدل') || cat.includes('أسنان') || cat.includes('علاج طبيعي') || cat.includes('فني') || cat.includes('مختبر') || cat.includes('أشعة') || cat.includes('مساعد طب') || cat.includes('بشري') || cat.includes('طاقم طبي') || cat.includes('طبي')) {
+      return 'medical';
+    }
+    
+    // الإداريين
+    if (cat.includes('إدار') || cat.includes('كاتب') || cat.includes('أمن') || cat.includes('حساب') || cat.includes('شئون') || cat.includes('شؤون') || cat.includes('سجلات') || cat.includes('نظم') || cat.includes('علاقات') || cat.includes('سكرت') || cat.includes('مدير') || cat.includes('رئيس') || cat.includes('مشرف') || cat.includes('إدارة') || cat.includes('مشتريات') || cat.includes('مخزن') || cat.includes('مخازن') || cat.includes('مالي') || cat.includes('قانون') || cat.includes('محام') || cat.includes('مهندس')) {
+      return 'admin';
+    }
+    
+    // عمال المستشفى
+    if (cat.includes('عامل') || cat.includes('خدمات') || cat.includes('معاون') || cat.includes('نظاف') || cat.includes('سائق') || cat.includes('حرفي') || cat.includes('صيانة') || cat.includes('مطبخ') || cat.includes('غسيل') || cat.includes('سواق') || cat.includes('حارس') || cat.includes('مغسلة') || cat.includes('بوفيه') || cat.includes('كهربائي') || cat.includes('سباك') || cat.includes('نجار')) {
+      return 'workers';
+    }
+    
+    return 'others';
+  };
+
+  // Group employees
+  var grouped = {
+    medical: [],
+    admin: [],
+    workers: [],
+    others: []
+  };
+
+  employees.forEach(function (emp) {
+    var g = classifyEmployee(emp);
+    grouped[g].push(emp);
+  });
+
+  // Calculate statistics for each group
+  var calculateStats = function calculateStats(groupList) {
+    var total = groupList.length;
+    var d1 = 0, d2 = 0, d3 = 0, refused = 0;
+    
+    groupList.forEach(function (emp) {
+      if (hasDose1(emp)) d1++;
+      if (hasDose2(emp)) d2++;
+      if (hasDose3(emp)) d3++;
+      if (isRefused(emp)) refused++;
+    });
+    
+    return {
+      total: total,
+      dose1: d1,
+      dose2: d2,
+      dose3: d3,
+      refused: refused,
+      p1: total > 0 ? Math.round((d1 / total) * 100) : 0,
+      p2: total > 0 ? Math.round((d2 / total) * 100) : 0,
+      p3: total > 0 ? Math.round((d3 / total) * 100) : 0,
+      prefused: total > 0 ? Math.round((refused / total) * 100) : 0
+    };
+  };
+
+  var statsMedical = calculateStats(grouped.medical);
+  var statsAdmin = calculateStats(grouped.admin);
+  var statsWorkers = calculateStats(grouped.workers);
+  var statsOthers = calculateStats(grouped.others);
+
+  // Grand total stats
+  var grandTotalList = employees;
+  var statsTotal = calculateStats(grandTotalList);
+
+  var handlePrint = function handlePrint() {
+    window.print();
+  };
+
+  // Get list of employees based on active drilldown group and filter
+  var getDrilldownList = function getDrilldownList() {
+    if (!activeTabGroup) return [];
+    var list = grouped[activeTabGroup];
+    if (drilldownFilter === 'all') return list;
+    return list.filter(function (emp) {
+      if (drilldownFilter === 'missing_dose1') return !hasDose1(emp) && !isRefused(emp);
+      if (drilldownFilter === 'missing_dose2') return hasDose1(emp) && !hasDose2(emp) && !isRefused(emp);
+      if (drilldownFilter === 'missing_dose3') return hasDose2(emp) && !hasDose3(emp) && !isRefused(emp);
+      if (drilldownFilter === 'refused') return isRefused(emp);
+      return true;
+    });
+  };
+
+  var drilldownEmployees = getDrilldownList();
+
+  // Helper to translate group name
+  var getGroupLabel = function getGroupLabel(g) {
+    if (g === 'medical') return 'الطاقم الطبي';
+    if (g === 'admin') return 'الإداريين';
+    if (g === 'workers') return 'عمال المستشفى';
+    return 'فئات أخرى غير مصنفة';
+  };
+
+  return React.createElement("div", { className: "space-y-6" },
+    // Page Header
+    React.createElement("div", { className: "flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm no-print" },
+      React.createElement("div", { className: "flex items-center gap-4.5" },
+        React.createElement("div", { className: "bg-emerald-100 p-3 rounded-2xl text-emerald-600 shadow-sm" },
+          React.createElement("i", { className: "fas fa-chart-pie text-2xl" })
+        ),
+        React.createElement("div", null,
+          React.createElement("h2", { className: "font-bold text-xl text-slate-800" }, "احصائية التطعيمات للعاملين"),
+          React.createElement("p", { className: "text-slate-500 text-xs font-semibold mt-1" }, "متابعة نسب التغطية والمستهدف والجرعات للفئات المختلفة")
+        )
+      ),
+      React.createElement("button", {
+        onClick: handlePrint,
+        className: "bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 cursor-pointer shadow-sm self-stretch sm:self-auto justify-center"
+      },
+        React.createElement("i", { className: "fas fa-print" }),
+        "طباعة الإحصائية الرسمية"
+      )
+    ),
+
+    // Print Header
+    React.createElement("div", { className: "hidden print:block text-black text-center mb-8" },
+      React.createElement("h2", { className: "font-extrabold text-xl mb-1" }, "جمهورية مصر العربية"),
+      React.createElement("h3", { className: "font-bold text-lg mb-1" }, "مديرية الشؤون الصحية"),
+      React.createElement("h3", { className: "font-bold text-base mb-4" }, "إحصائية ونسب تغطية تطعيمات العاملين بالمستشفى"),
+      React.createElement("div", { className: "text-right font-semibold text-xs space-y-1 mb-4 border-b pb-2" },
+        React.createElement("div", null, "إجمالي قوة المستشفى: " + employees.length + " موظف"),
+        React.createElement("div", null, "تاريخ الاستخراج: " + new Date().toLocaleDateString('ar-EG'))
+      )
+    ),
+
+    // KPI Summary Cards (no-print)
+    React.createElement("div", { className: "grid grid-cols-2 lg:grid-cols-4 gap-4 no-print" },
+      // Card 1
+      React.createElement("div", { className: "bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4" },
+        React.createElement("div", { className: "bg-slate-100 text-slate-700 p-3 rounded-xl" },
+          React.createElement("i", { className: "fas fa-users text-xl" })
+        ),
+        React.createElement("div", null,
+          React.createElement("div", { className: "text-slate-400 text-[11px] font-bold" }, "قوة المستشفى المستهدفة"),
+          React.createElement("div", { className: "text-2xl font-extrabold text-slate-800 mt-0.5" }, statsTotal.total),
+          React.createElement("div", { className: "text-xs text-slate-500 font-semibold mt-0.5" }, "إجمالي العاملين")
+        )
+      ),
+      // Card 2
+      React.createElement("div", { className: "bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4" },
+        React.createElement("div", { className: "bg-emerald-50 text-emerald-600 p-3 rounded-xl" },
+          React.createElement("i", { className: "fas fa-syringe text-xl" })
+        ),
+        React.createElement("div", null,
+          React.createElement("div", { className: "text-slate-400 text-[11px] font-bold" }, "تغطية الجرعة الأولى"),
+          React.createElement("div", { className: "text-2xl font-extrabold text-emerald-600 mt-0.5" }, statsTotal.dose1),
+          React.createElement("div", { className: "text-xs text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-md inline-block mt-1" }, statsTotal.p1 + "%")
+        )
+      ),
+      // Card 3
+      React.createElement("div", { className: "bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4" },
+        React.createElement("div", { className: "bg-blue-50 text-blue-600 p-3 rounded-xl" },
+          React.createElement("i", { className: "fas fa-shield-virus text-xl" })
+        ),
+        React.createElement("div", null,
+          React.createElement("div", { className: "text-slate-400 text-[11px] font-bold" }, "تغطية الجرعة الثانية"),
+          React.createElement("div", { className: "text-2xl font-extrabold text-blue-600 mt-0.5" }, statsTotal.dose2),
+          React.createElement("div", { className: "text-xs text-blue-700 font-bold bg-blue-50 px-1.5 py-0.5 rounded-md inline-block mt-1" }, statsTotal.p2 + "%")
+        )
+      ),
+      // Card 4
+      React.createElement("div", { className: "bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4" },
+        React.createElement("div", { className: "bg-purple-50 text-purple-600 p-3 rounded-xl" },
+          React.createElement("i", { className: "fas fa-virus-slash text-xl" })
+        ),
+        React.createElement("div", null,
+          React.createElement("div", { className: "text-slate-400 text-[11px] font-bold" }, "تغطية الجرعة الثالثة"),
+          React.createElement("div", { className: "text-2xl font-extrabold text-purple-600 mt-0.5" }, statsTotal.dose3),
+          React.createElement("div", { className: "text-xs text-purple-700 font-bold bg-purple-50 px-1.5 py-0.5 rounded-md inline-block mt-1" }, statsTotal.p3 + "%")
+        )
+      )
+    ),
+
+    // Main Statistics Table Card
+    React.createElement("div", { className: "bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden" },
+      React.createElement("div", { className: "p-6 border-b border-slate-100 bg-slate-50/50 no-print" },
+        React.createElement("h3", { className: "font-bold text-base text-slate-800" }, "جدول نسب التغطية التفصيلي بحسب الفئة")
+      ),
+      React.createElement("div", { className: "overflow-x-auto" },
+        React.createElement("table", { className: "min-w-full divide-y divide-slate-200 text-right" },
+          React.createElement("thead", { className: "bg-slate-100 text-slate-700 font-bold" },
+            React.createElement("tr", null,
+              React.createElement("th", { className: "px-4 py-3.5 text-sm text-right" }, "الفئة الرئيسية"),
+              React.createElement("th", { className: "px-4 py-3.5 text-sm text-center" }, "المستهدف (العدد الإجمالي)"),
+              React.createElement("th", { className: "px-4 py-3.5 text-sm text-center bg-emerald-50/50" }, "الجرعة الأولى (المتطعم)"),
+              React.createElement("th", { className: "px-4 py-3.5 text-sm text-center bg-emerald-100/30" }, "نسبة التغطية (الأولى)"),
+              React.createElement("th", { className: "px-4 py-3.5 text-sm text-center bg-blue-50/50" }, "الجرعة الثانية (المتطعم)"),
+              React.createElement("th", { className: "px-4 py-3.5 text-sm text-center bg-blue-100/30" }, "نسبة التغطية (الثانية)"),
+              React.createElement("th", { className: "px-4 py-3.5 text-sm text-center bg-purple-50/50" }, "الجرعة الثالثة (المتطعم)"),
+              React.createElement("th", { className: "px-4 py-3.5 text-sm text-center bg-purple-100/30" }, "نسبة التغطية (الثالثة)"),
+              React.createElement("th", { className: "px-4 py-3.5 text-sm text-center text-rose-700 bg-rose-50/50 no-print" }, "الرافضين للتطعيم")
+            )
+          ),
+          React.createElement("tbody", { className: "divide-y divide-slate-200 text-slate-700 font-semibold text-sm bg-white" },
+            // Row 1: Medical Staff
+            React.createElement("tr", { 
+              onClick: function() { setActiveTabGroup(activeTabGroup === 'medical' ? null : 'medical'); setDrilldownFilter('all'); },
+              className: "hover:bg-slate-50 cursor-pointer transition-colors " + (activeTabGroup === 'medical' ? 'bg-slate-50/80 border-r-4 border-r-emerald-500' : '')
+            },
+              React.createElement("td", { className: "px-4 py-3.5 flex items-center gap-2 font-bold text-slate-950 text-right" },
+                React.createElement("i", { className: "fas fa-user-md text-emerald-500 w-5" }),
+                "الطاقم الطبي",
+                React.createElement("span", { className: "text-xs text-slate-400 font-normal no-print" }, " (انقر للتفاصيل)")
+              ),
+              React.createElement("td", { className: "px-4 py-3.5 text-center font-bold text-slate-900" }, statsMedical.total),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-emerald-700 bg-emerald-50/30 font-bold" }, statsMedical.dose1),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-emerald-800 bg-emerald-100/20 font-extrabold" }, statsMedical.p1 + "%"),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-blue-700 bg-blue-50/30 font-bold" }, statsMedical.dose2),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-blue-800 bg-blue-100/20 font-extrabold" }, statsMedical.p2 + "%"),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-purple-700 bg-purple-50/30 font-bold" }, statsMedical.dose3),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-purple-800 bg-purple-100/20 font-extrabold" }, statsMedical.p3 + "%"),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-rose-700 bg-rose-50/30 font-bold no-print" }, statsMedical.refused + " (" + statsMedical.prefused + "%)")
+            ),
+            // Row 2: Admin Staff
+            React.createElement("tr", { 
+              onClick: function() { setActiveTabGroup(activeTabGroup === 'admin' ? null : 'admin'); setDrilldownFilter('all'); },
+              className: "hover:bg-slate-50 cursor-pointer transition-colors " + (activeTabGroup === 'admin' ? 'bg-slate-50/80 border-r-4 border-r-blue-500' : '')
+            },
+              React.createElement("td", { className: "px-4 py-3.5 flex items-center gap-2 font-bold text-slate-950 text-right" },
+                React.createElement("i", { className: "fas fa-briefcase text-blue-500 w-5" }),
+                "الإداريين",
+                React.createElement("span", { className: "text-xs text-slate-400 font-normal no-print" }, " (انقر للتفاصيل)")
+              ),
+              React.createElement("td", { className: "px-4 py-3.5 text-center font-bold text-slate-900" }, statsAdmin.total),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-emerald-700 bg-emerald-50/30 font-bold" }, statsAdmin.dose1),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-emerald-800 bg-emerald-100/20 font-extrabold" }, statsAdmin.p1 + "%"),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-blue-700 bg-blue-50/30 font-bold" }, statsAdmin.dose2),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-blue-800 bg-blue-100/20 font-extrabold" }, statsAdmin.p2 + "%"),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-purple-700 bg-purple-50/30 font-bold" }, statsAdmin.dose3),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-purple-800 bg-purple-100/20 font-extrabold" }, statsAdmin.p3 + "%"),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-rose-700 bg-rose-50/30 font-bold no-print" }, statsAdmin.refused + " (" + statsAdmin.prefused + "%)")
+            ),
+            // Row 3: Workers
+            React.createElement("tr", { 
+              onClick: function() { setActiveTabGroup(activeTabGroup === 'workers' ? null : 'workers'); setDrilldownFilter('all'); },
+              className: "hover:bg-slate-50 cursor-pointer transition-colors " + (activeTabGroup === 'workers' ? 'bg-slate-50/80 border-r-4 border-r-amber-500' : '')
+            },
+              React.createElement("td", { className: "px-4 py-3.5 flex items-center gap-2 font-bold text-slate-950 text-right" },
+                React.createElement("i", { className: "fas fa-hands-helping text-amber-500 w-5" }),
+                "عمال المستشفى",
+                React.createElement("span", { className: "text-xs text-slate-400 font-normal no-print" }, " (انقر للتفاصيل)")
+              ),
+              React.createElement("td", { className: "px-4 py-3.5 text-center font-bold text-slate-900" }, statsWorkers.total),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-emerald-700 bg-emerald-50/30 font-bold" }, statsWorkers.dose1),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-emerald-800 bg-emerald-100/20 font-extrabold" }, statsWorkers.p1 + "%"),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-blue-700 bg-blue-50/30 font-bold" }, statsWorkers.dose2),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-blue-800 bg-blue-100/20 font-extrabold" }, statsWorkers.p2 + "%"),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-purple-700 bg-purple-50/30 font-bold" }, statsWorkers.dose3),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-purple-800 bg-purple-100/20 font-extrabold" }, statsWorkers.p3 + "%"),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-rose-700 bg-rose-50/30 font-bold no-print" }, statsWorkers.refused + " (" + statsWorkers.prefused + "%)")
+            ),
+            // Row 4: Others (if any)
+            statsOthers.total > 0 && React.createElement("tr", { 
+              onClick: function() { setActiveTabGroup(activeTabGroup === 'others' ? null : 'others'); setDrilldownFilter('all'); },
+              className: "hover:bg-slate-50 cursor-pointer transition-colors " + (activeTabGroup === 'others' ? 'bg-slate-50/80 border-r-4 border-r-slate-400' : '')
+            },
+              React.createElement("td", { className: "px-4 py-3.5 flex items-center gap-2 font-bold text-slate-950 text-right" },
+                React.createElement("i", { className: "fas fa-question-circle text-slate-400 w-5" }),
+                "فئات أخرى غير مصنفة",
+                React.createElement("span", { className: "text-xs text-slate-400 font-normal no-print" }, " (انقر للتفاصيل)")
+              ),
+              React.createElement("td", { className: "px-4 py-3.5 text-center font-bold text-slate-900" }, statsOthers.total),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-emerald-700 bg-emerald-50/30 font-bold" }, statsOthers.dose1),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-emerald-800 bg-emerald-100/20 font-extrabold" }, statsOthers.p1 + "%"),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-blue-700 bg-blue-50/30 font-bold" }, statsOthers.dose2),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-blue-800 bg-blue-100/20 font-extrabold" }, statsOthers.p2 + "%"),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-purple-700 bg-purple-50/30 font-bold" }, statsOthers.dose3),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-purple-800 bg-purple-100/20 font-extrabold" }, statsOthers.p3 + "%"),
+              React.createElement("td", { className: "px-4 py-3.5 text-center text-rose-700 bg-rose-50/30 font-bold no-print" }, statsOthers.refused + " (" + statsOthers.prefused + "%)")
+            ),
+            // Row 5: Total
+            React.createElement("tr", { className: "bg-slate-50 border-t-2 border-slate-300 text-slate-950 font-bold" },
+              React.createElement("td", { className: "px-4 py-4 flex items-center gap-2 text-base font-extrabold text-right" },
+                React.createElement("i", { className: "fas fa-calculator text-slate-700 w-5" }),
+                "الإجمالي العام للمستشفى"
+              ),
+              React.createElement("td", { className: "px-4 py-4 text-center text-base font-extrabold text-slate-950" }, statsTotal.total),
+              React.createElement("td", { className: "px-4 py-4 text-center text-base font-extrabold text-emerald-800 bg-emerald-50/40" }, statsTotal.dose1),
+              React.createElement("td", { className: "px-4 py-4 text-center text-base font-extrabold text-emerald-900 bg-emerald-100/40" }, statsTotal.p1 + "%"),
+              React.createElement("td", { className: "px-4 py-4 text-center text-base font-extrabold text-blue-800 bg-blue-50/40" }, statsTotal.dose2),
+              React.createElement("td", { className: "px-4 py-4 text-center text-base font-extrabold text-blue-900 bg-blue-100/40" }, statsTotal.p2 + "%"),
+              React.createElement("td", { className: "px-4 py-4 text-center text-base font-extrabold text-purple-800 bg-purple-50/40" }, statsTotal.dose3),
+              React.createElement("td", { className: "px-4 py-4 text-center text-base font-extrabold text-purple-900 bg-purple-100/40" }, statsTotal.p3 + "%"),
+              React.createElement("td", { className: "px-4 py-4 text-center text-base font-extrabold text-rose-800 bg-rose-50/40 no-print" }, statsTotal.refused + " (" + statsTotal.prefused + "%)")
+            )
+          )
+        )
+      )
+    ),
+
+    // Interactive drill-down section (no-print)
+    activeTabGroup && React.createElement("div", { className: "bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden animate-fadeIn no-print" },
+      React.createElement("div", { className: "p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" },
+        React.createElement("div", null,
+          React.createElement("h3", { className: "font-bold text-base text-slate-800 flex items-center gap-2" },
+            React.createElement("i", { className: "fas fa-search-dollar text-emerald-600" }),
+            "قائمة فحص الموظفين للفئة: ",
+            React.createElement("span", { className: "text-emerald-700 font-extrabold" }, getGroupLabel(activeTabGroup))
+          ),
+          React.createElement("p", { className: "text-slate-500 text-xs font-semibold mt-1" }, "اضغط على الأزرار أدناه لتصفية الموظفين حسب حالة الجرعات واستخراج القوائم.")
+        ),
+        React.createElement("button", {
+          onClick: function() { setActiveTabGroup(null); },
+          className: "text-slate-400 hover:text-slate-600 font-bold text-xs flex items-center gap-1 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-all cursor-pointer"
+        },
+          React.createElement("i", { className: "fas fa-times" }),
+          "إغلاق التفاصيل"
+        )
+      ),
+
+      // Filter tabs inside drill-down
+      React.createElement("div", { className: "p-6 bg-white border-b border-slate-100 flex flex-wrap gap-2" },
+        React.createElement("button", {
+          onClick: function() { setDrilldownFilter('all'); },
+          className: "px-4 py-2 text-xs rounded-xl font-bold transition-all border cursor-pointer " + (drilldownFilter === 'all' ? 'bg-slate-800 text-white border-slate-800' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200')
+        }, "الكل (" + grouped[activeTabGroup].length + ")"),
+        React.createElement("button", {
+          onClick: function() { setDrilldownFilter('missing_dose1'); },
+          className: "px-4 py-2 text-xs rounded-xl font-bold transition-all border cursor-pointer " + (drilldownFilter === 'missing_dose1' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-50 hover:bg-emerald-100/50 text-emerald-700 border-emerald-200')
+        }, "لم يتلقَ الجرعة الأولى (" + grouped[activeTabGroup].filter(function(e){return !hasDose1(e) && !isRefused(e);}).length + ")"),
+        React.createElement("button", {
+          onClick: function() { setDrilldownFilter('missing_dose2'); },
+          className: "px-4 py-2 text-xs rounded-xl font-bold transition-all border cursor-pointer " + (drilldownFilter === 'missing_dose2' ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 hover:bg-blue-100/50 text-blue-700 border-blue-200')
+        }, "تلقى الأولى وفاتته الثانية (" + grouped[activeTabGroup].filter(function(e){return hasDose1(e) && !hasDose2(e) && !isRefused(e);}).length + ")"),
+        React.createElement("button", {
+          onClick: function() { setDrilldownFilter('missing_dose3'); },
+          className: "px-4 py-2 text-xs rounded-xl font-bold transition-all border cursor-pointer " + (drilldownFilter === 'missing_dose3' ? 'bg-purple-600 text-white border-purple-600' : 'bg-purple-50 hover:bg-purple-100/50 text-purple-700 border-purple-200')
+        }, "تلقى الثانية وفاتته الثالثة (" + grouped[activeTabGroup].filter(function(e){return hasDose2(e) && !hasDose3(e) && !isRefused(e);}).length + ")"),
+        React.createElement("button", {
+          onClick: function() { setDrilldownFilter('refused'); },
+          className: "px-4 py-2 text-xs rounded-xl font-bold transition-all border cursor-pointer " + (drilldownFilter === 'refused' ? 'bg-rose-600 text-white border-rose-600' : 'bg-rose-50 hover:bg-rose-100/50 text-rose-700 border-rose-200')
+        }, "الرافضين للتطعيم (" + grouped[activeTabGroup].filter(isRefused).length + ")")
+      ),
+
+      // Employee list for the chosen filter
+      React.createElement("div", { className: "overflow-x-auto" },
+        drilldownEmployees.length === 0 ? 
+          React.createElement("div", { className: "p-12 text-center text-slate-400 font-bold" },
+            React.createElement("i", { className: "fas fa-check-circle text-4xl text-emerald-500 mb-3" }),
+            React.createElement("div", { className: "text-slate-600 text-sm" }, "لا يوجد موظفون ينطبق عليهم هذا الفلتر حالياً")
+          ) :
+          React.createElement("table", { className: "min-w-full divide-y divide-slate-200 text-right text-xs" },
+            React.createElement("thead", { className: "bg-slate-50 text-slate-500 font-bold" },
+              React.createElement("tr", null,
+                React.createElement("th", { className: "px-4 py-3 text-right" }, "رقم الهوية / التعريف"),
+                React.createElement("th", { className: "px-4 py-3 text-right" }, "الاسم"),
+                React.createElement("th", { className: "px-4 py-3 text-right" }, "الوظيفة الفرعية"),
+                React.createElement("th", { className: "px-4 py-3 text-center" }, "الجرعة 1"),
+                React.createElement("th", { className: "px-4 py-3 text-center" }, "الجرعة 2"),
+                React.createElement("th", { className: "px-4 py-3 text-center" }, "الجرعة 3"),
+                React.createElement("th", { className: "px-4 py-3 text-right" }, "ملاحظات")
+              )
+            ),
+            React.createElement("tbody", { className: "divide-y divide-slate-150 text-slate-600 font-semibold bg-white text-right" },
+              drilldownEmployees.map(function (emp, idx) {
+                return React.createElement("tr", { key: emp.nationalId || idx, className: "hover:bg-slate-50/50 transition-colors text-right" },
+                  React.createElement("td", { className: "px-4 py-3 font-mono text-slate-500 text-right" }, emp.nationalId.startsWith('TEMP_') || emp.nationalId.startsWith('DUP_') ? "بدون" : emp.nationalId),
+                  React.createElement("td", { className: "px-4 py-3 text-slate-800 font-bold text-right" }, emp.name),
+                  React.createElement("td", { className: "px-4 py-3 text-right" }, emp.category || "-"),
+                  React.createElement("td", { className: "px-4 py-3 text-center" }, 
+                    hasDose1(emp) ? 
+                      React.createElement("span", { className: "bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg text-[10px] font-bold" }, 
+                        React.createElement("i", { className: "fas fa-check ml-1" }),
+                        emp.dose1 || "تم"
+                      ) : 
+                      isRefused(emp) ?
+                        React.createElement("span", { className: "bg-rose-50 text-rose-700 px-2 py-1 rounded-lg text-[10px] font-bold" }, "مرفوض") :
+                        React.createElement("span", { className: "bg-amber-50 text-amber-700 px-2 py-1 rounded-lg text-[10px] font-bold" }, "مستحق")
+                  ),
+                  React.createElement("td", { className: "px-4 py-3 text-center" }, 
+                    hasDose2(emp) ? 
+                      React.createElement("span", { className: "bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg text-[10px] font-bold" }, 
+                        React.createElement("i", { className: "fas fa-check ml-1" }),
+                        emp.dose2 || "تم"
+                      ) : 
+                      isRefused(emp) ?
+                        React.createElement("span", { className: "bg-rose-50 text-rose-700 px-2 py-1 rounded-lg text-[10px] font-bold" }, "مرفوض") :
+                        hasDose1(emp) ?
+                          React.createElement("span", { className: "bg-blue-50 text-blue-700 px-2 py-1 rounded-lg text-[10px] font-bold" }, "مستحق") :
+                          React.createElement("span", { className: "text-slate-300" }, "-")
+                  ),
+                  React.createElement("td", { className: "px-4 py-3 text-center" }, 
+                    hasDose3(emp) ? 
+                      React.createElement("span", { className: "bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg text-[10px] font-bold" }, 
+                        React.createElement("i", { className: "fas fa-check ml-1" }),
+                        emp.dose3 || "تم"
+                      ) : 
+                      isRefused(emp) ?
+                        React.createElement("span", { className: "bg-rose-50 text-rose-700 px-2 py-1 rounded-lg text-[10px] font-bold" }, "مرفوض") :
+                        hasDose2(emp) ?
+                          React.createElement("span", { className: "bg-purple-50 text-purple-700 px-2 py-1 rounded-lg text-[10px] font-bold" }, "مستحق") :
+                          React.createElement("span", { className: "text-slate-300" }, "-")
+                  ),
+                  React.createElement("td", { className: "px-4 py-3 text-slate-500 font-normal max-w-xs truncate text-right", title: emp.notes }, emp.notes || "-")
+                );
+              })
+            )
+          )
+      )
+    ),
+
+    // Sub-categories classification index card (no-print)
+    React.createElement("div", { className: "bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 no-print" },
+      React.createElement("h3", { className: "font-bold text-base text-slate-800 mb-3 flex items-center gap-2" },
+        React.createElement("i", { className: "fas fa-tags text-slate-500" }),
+        "دليل توزيع وتصنيف الفئات الفرعية"
+      ),
+      React.createElement("p", { className: "text-slate-500 text-xs font-semibold mb-4 leading-relaxed" },
+        "يتم فرز وتوزيع الموظفين تلقائياً إلى الفئات الثلاث الرئيسية بناءً على مسمى الفئة المدخلة. إليك تصنيف الفئات الفرعية المكتشفة في بياناتك حالياً:"
+      ),
+      React.createElement("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-6" },
+        // Medical Card
+        React.createElement("div", { className: "bg-emerald-50/40 rounded-2xl p-4.5 border border-emerald-100" },
+          React.createElement("div", { className: "flex items-center gap-2 font-bold text-emerald-900 mb-3" },
+            React.createElement("i", { className: "fas fa-user-md text-emerald-600" }),
+            "مجموعات الطاقم الطبي (" + grouped.medical.length + " موظف)"
+          ),
+          React.createElement("div", { className: "flex flex-wrap gap-1.5" },
+            _toConsumableArray(new Set(grouped.medical.map(function(e){return e.category;}).filter(Boolean))).map(function(cat, i){
+              var count = grouped.medical.filter(function(e){return e.category === cat;}).length;
+              return React.createElement("span", { key: i, className: "bg-white text-emerald-800 border border-emerald-200/50 px-2.5 py-1 rounded-xl text-xs font-bold shadow-sm" }, cat + ": " + count);
+            })
+          )
+        ),
+        // Admin Card
+        React.createElement("div", { className: "bg-blue-50/40 rounded-2xl p-4.5 border border-blue-100" },
+          React.createElement("div", { className: "flex items-center gap-2 font-bold text-blue-900 mb-3" },
+            React.createElement("i", { className: "fas fa-briefcase text-blue-600" }),
+            "مجموعات الإداريين (" + grouped.admin.length + " موظف)"
+          ),
+          React.createElement("div", { className: "flex flex-wrap gap-1.5" },
+            _toConsumableArray(new Set(grouped.admin.map(function(e){return e.category;}).filter(Boolean))).map(function(cat, i){
+              var count = grouped.admin.filter(function(e){return e.category === cat;}).length;
+              return React.createElement("span", { key: i, className: "bg-white text-blue-800 border border-blue-200/50 px-2.5 py-1 rounded-xl text-xs font-bold shadow-sm" }, cat + ": " + count);
+            })
+          )
+        ),
+        // Workers Card
+        React.createElement("div", { className: "bg-amber-50/40 rounded-2xl p-4.5 border border-amber-100" },
+          React.createElement("div", { className: "flex items-center gap-2 font-bold text-amber-900 mb-3" },
+            React.createElement("i", { className: "fas fa-hands-helping text-amber-600" }),
+            "مجموعات عمال المستشفى (" + grouped.workers.length + " موظف)"
+          ),
+          React.createElement("div", { className: "flex flex-wrap gap-1.5" },
+            _toConsumableArray(new Set(grouped.workers.map(function(e){return e.category;}).filter(Boolean))).map(function(cat, i){
+              var count = grouped.workers.filter(function(e){return e.category === cat;}).length;
+              return React.createElement("span", { key: i, className: "bg-white text-amber-800 border border-amber-200/50 px-2.5 py-1 rounded-xl text-xs font-bold shadow-sm" }, cat + ": " + count);
+            })
+          )
+        )
+      )
+    ),
+
+    // Signature Area for print
+    React.createElement("div", {
+      className: "hidden print:flex w-full justify-between items-center mt-16 pt-8 px-12 text-black",
+      style: { pageBreakInside: 'avoid' }
+    },
+      React.createElement("div", { className: "font-bold text-base text-right w-1/3" }, "أعده الإحصائي"),
+      React.createElement("div", { className: "font-bold text-base text-center w-1/3" }, "مسؤول مكافحة العدوى"),
+      React.createElement("div", { className: "font-bold text-base text-left w-1/3" }, "يعتمد مدير المستشفى")
     )
   );
 };
