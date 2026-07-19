@@ -113,10 +113,6 @@ var Layout = function Layout(_ref) {
     icon: 'fa-syringe',
     label: 'التطعيمات'
   }, {
-    id: 'injuries',
-    icon: 'fa-triangle-exclamation',
-    label: 'استمارة الوخز'
-  }, {
     id: 'sync_settings',
     icon: 'fa-rotate',
     label: 'المزامنة والإعدادات'
@@ -382,11 +378,11 @@ var Vaccinations = function Vaccinations(_ref2) {
                 var dose3 = getIsoDose('swal-d3');
                 var notes = document.getElementById('swal-notes').value.trim();
                 if (!category || !name || !id) {
-                  Swal.showValidationMessage('يرجى إدخال جميع الحقول الإجبارية (الفئة، الاسم، رقم البطاقة)');
+                  Swal.showValidationMessage('يرجى إدخال جميع الحقول الإجبارية (الفئة، الاسم، رقم البطاقة/التعريف)');
                   return false;
                 }
-                if (id.length !== 14 || isNaN(id)) {
-                  Swal.showValidationMessage('رقم البطاقة يجب أن يتكون من 14 رقم صحيح');
+                if (id.length < 3) {
+                  Swal.showValidationMessage('رقم البطاقة أو الرقم التعريفي يجب أن يكون 3 خانات على الأقل');
                   return false;
                 }
                 return {
@@ -737,8 +733,8 @@ var Vaccinations = function Vaccinations(_ref2) {
                       return val;
                     };
                     var idEdit = document.getElementById('swal-id-edit').value.trim();
-                    if (idEdit && (idEdit.length !== 14 || isNaN(idEdit))) {
-                      Swal.showValidationMessage('رقم البطاقة يجب أن يتكون من 14 رقم صحيح');
+                    if (idEdit && idEdit.length < 3) {
+                      Swal.showValidationMessage('الرقم التعريفي يجب أن يكون 3 خانات على الأقل');
                       return false;
                     }
                     return {
@@ -836,370 +832,6 @@ var Vaccinations = function Vaccinations(_ref2) {
     className: "font-bold text-base text-left w-1/3"
   }, "\u0645\u062F\u064A\u0631 \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649")))));
 };
-
-// ==========================================
-// مكون الوخز (Injuries Component)
-// ==========================================
-const Injuries = ({
-  api
-}) => {
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [isSearching, setIsSearching] = React.useState(false);
-  const [employee, setEmployee] = React.useState(null);
-
-  // Needlestick documents
-  const [formImage, setFormImage] = React.useState(null);
-  const [analysis1Image, setAnalysis1Image] = React.useState(null);
-  const [analysis2Image, setAnalysis2Image] = React.useState(null);
-  const [analysis3Image, setAnalysis3Image] = React.useState(null);
-
-  // Table of injured employees (or everyone searched)
-  const [employeesList, setEmployeesList] = React.useState([]);
-  const [isLoadingList, setIsLoadingList] = React.useState(false);
-  React.useEffect(() => {
-    loadAllEmployees();
-  }, []);
-  const loadAllEmployees = async () => {
-    setIsLoadingList(true);
-    const data = await api.loadEmployees();
-    if (data) {
-      const processed = data.map(emp => {
-        let form = null;
-        let a1 = null;
-        let a2 = null;
-        let a3 = null;
-        if (emp.formImage) {
-          try {
-            const parsed = JSON.parse(emp.formImage);
-            if (Array.isArray(parsed) && parsed.length > 0) form = parsed[0];else form = emp.formImage;
-          } catch (e) {
-            form = emp.formImage;
-          }
-        }
-        if (emp.analysisImages) {
-          try {
-            const p = JSON.parse(emp.analysisImages);
-            if (!Array.isArray(p) && p !== null && typeof p === 'object') {
-              a1 = p.a1 || null;
-              a2 = p.a2 || null;
-              a3 = p.a3 || null;
-            } else if (Array.isArray(p)) {
-              a1 = p[0] || null;
-              a2 = p[1] || null;
-              a3 = p[2] || null;
-            }
-          } catch (e) {}
-        }
-        return {
-          ...emp,
-          form,
-          a1,
-          a2,
-          a3
-        };
-      }).filter(emp => emp.form || emp.a1 || emp.a2 || emp.a3);
-      setEmployeesList(processed);
-    }
-    setIsLoadingList(false);
-  };
-  const handleSearch = async () => {
-    if (searchQuery.trim().length === 14 && !isNaN(searchQuery)) {
-      setIsSearching(true);
-      const emp = await api.fetchEmployee(searchQuery);
-      if (emp) {
-        setEmployee(emp);
-        parseAndSetDocs(emp);
-      } else {
-        setEmployee(null);
-      }
-      setIsSearching(false);
-    } else {
-      Swal.fire('تنبيه', 'يرجى إدخال رقم قومي صحيح (14 رقم)', 'warning');
-    }
-  };
-  const parseAndSetDocs = emp => {
-    let form = null;
-    let a1 = null;
-    let a2 = null;
-    let a3 = null;
-    if (emp.formImage) {
-      try {
-        const parsed = JSON.parse(emp.formImage);
-        if (Array.isArray(parsed) && parsed.length > 0) form = parsed[0];else form = emp.formImage;
-      } catch (e) {
-        form = emp.formImage;
-      }
-    }
-    if (emp.analysisImages) {
-      try {
-        const p = JSON.parse(emp.analysisImages);
-        if (!Array.isArray(p) && p !== null && typeof p === 'object') {
-          a1 = p.a1 || null;
-          a2 = p.a2 || null;
-          a3 = p.a3 || null;
-        } else if (Array.isArray(p)) {
-          a1 = p[0] || null;
-          a2 = p[1] || null;
-          a3 = p[2] || null;
-        }
-      } catch (e) {}
-    }
-    setFormImage(form);
-    setAnalysis1Image(a1);
-    setAnalysis2Image(a2);
-    setAnalysis3Image(a3);
-  };
-  const handleRetrieve = emp => {
-    setEmployee(emp);
-    setSearchQuery(emp.nationalId || '');
-    parseAndSetDocs(emp);
-  };
-  const clearForm = () => {
-    setEmployee(null);
-    setSearchQuery('');
-    setFormImage(null);
-    setAnalysis1Image(null);
-    setAnalysis2Image(null);
-    setAnalysis3Image(null);
-  };
-  const fileToBase64 = file => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = error => reject(error);
-    });
-  };
-  const handleImageChange = async (e, setter) => {
-    const file = e.target.files[0];
-    if (file) {
-      const base64 = await fileToBase64(file);
-      setter(base64);
-    }
-  };
-  const handleSubmit = async e => {
-    e.preventDefault();
-    if (!formImage && !analysis1Image && !analysis2Image && !analysis3Image) {
-      Swal.fire('تنبيه', 'يرجى رفع أي مستند أولاً', 'warning');
-      return;
-    }
-    let vStatus = 'غير مطعم / لا توجد بيانات';
-    if (employee.dose3) vStatus = 'مكتمل التطعيم';else if (employee.dose1 || employee.dose2) vStatus = "تطعيم غير مكتمل";
-    const analysisObj = {
-      a1: analysis1Image,
-      a2: analysis2Image,
-      a3: analysis3Image
-    };
-
-    // We send formImage as string, analysisImages as JSON string
-    const success = await api.saveNeedlestick({
-      nationalId: employee.nationalId,
-      name: employee.name,
-      formImage: formImage || '',
-      analysisImages: JSON.stringify(analysisObj),
-      vaccineStatus: vStatus
-    });
-    if (success) {
-      Swal.fire({
-        icon: 'success',
-        title: 'تم',
-        text: 'تم الحفظ بنجاح',
-        timer: 2000,
-        showConfirmButton: false
-      });
-      clearForm();
-      loadAllEmployees(); // refresh table
-    }
-  };
-  const renderUploadBox = (title, image, setter) => /*#__PURE__*/React.createElement("div", {
-    className: "border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:bg-slate-50 transition-colors relative flex flex-col items-center justify-center min-h-[140px]"
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "file",
-    accept: "image/*,.pdf",
-    onChange: e => handleImageChange(e, setter),
-    className: "absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-  }), !image ? /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-col items-center justify-center gap-2 pointer-events-none"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "w-10 h-10 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mb-1"
-  }, /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-upload text-lg"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "font-bold text-slate-700 text-sm"
-  }, title), /*#__PURE__*/React.createElement("span", {
-    className: "text-xs text-slate-500"
-  }, "\u0627\u0636\u063A\u0637 \u0623\u0648 \u0627\u0633\u062D\u0628 \u0627\u0644\u0645\u0644\u0641 \u0647\u0646\u0627")) : /*#__PURE__*/React.createElement("div", {
-    className: "relative group w-full flex flex-col items-center"
-  }, image.startsWith('data:image') ? /*#__PURE__*/React.createElement("img", {
-    src: image,
-    className: "h-24 object-contain rounded-lg border border-slate-200 shadow-sm"
-  }) : /*#__PURE__*/React.createElement("div", {
-    className: "p-3 bg-slate-100 border border-slate-200 rounded-lg text-sm font-bold text-slate-700 w-full flex items-center justify-center gap-2"
-  }, /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-file-pdf text-rose-500"
-  }), " PDF"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: e => {
-      e.preventDefault();
-      setter(null);
-    },
-    className: "absolute -top-2 -right-2 z-30 bg-white text-rose-500 border border-rose-200 rounded-full w-7 h-7 flex items-center justify-center shadow-sm hover:!bg-rose-500 hover:text-white transition-colors cursor-pointer"
-  }, /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-times text-xs"
-  }))));
-  return /*#__PURE__*/React.createElement("div", {
-    className: "space-y-6 animate-fadeIn"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "p-6 border-b border-slate-100 bg-slate-50/50"
-  }, /*#__PURE__*/React.createElement("h2", {
-    className: "text-xl font-bold text-slate-800 flex items-center gap-2"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "bg-rose-100 p-2 rounded-lg text-rose-600"
-  }, /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-table"
-  })), "\u062C\u062F\u0648\u0644 \u0627\u0633\u062A\u0645\u0627\u0631\u0627\u062A \u0627\u0644\u0648\u062E\u0632")), /*#__PURE__*/React.createElement("div", {
-    className: "overflow-x-auto"
-  }, isLoadingList ? /*#__PURE__*/React.createElement("div", {
-    className: "p-12 text-center text-slate-500 font-bold"
-  }, "\u062C\u0627\u0631\u064A \u062A\u062D\u0645\u064A\u0644 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A...") : employeesList.length === 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "p-12 text-center text-slate-400 font-bold"
-  }, "\u0644\u0627 \u062A\u0648\u062C\u062F \u0627\u0633\u062A\u0645\u0627\u0631\u0627\u062A \u0648\u062E\u0632 \u0645\u0633\u062C\u0644\u0629 \u062D\u0627\u0644\u064A\u0627\u064B") : /*#__PURE__*/React.createElement("table", {
-    className: "w-full text-right border-collapse whitespace-nowrap"
-  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    className: "bg-white border-b border-slate-200"
-  }, /*#__PURE__*/React.createElement("th", {
-    className: "p-4 font-bold text-slate-500 text-sm"
-  }, "\u0627\u0644\u0627\u0633\u0645"), /*#__PURE__*/React.createElement("th", {
-    className: "p-4 font-bold text-slate-500 text-sm"
-  }, "\u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0642\u0648\u0645\u064A"), /*#__PURE__*/React.createElement("th", {
-    className: "p-4 font-bold text-slate-500 text-sm"
-  }, "\u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646"), /*#__PURE__*/React.createElement("th", {
-    className: "p-4 font-bold text-slate-500 text-sm text-center"
-  }, "\u0627\u0633\u062A\u0645\u0627\u0631\u0629 \u0627\u0644\u0648\u062E\u0632"), /*#__PURE__*/React.createElement("th", {
-    className: "p-4 font-bold text-slate-500 text-sm text-center"
-  }, "\u0627\u0644\u062A\u062D\u0644\u064A\u0644 \u0627\u0644\u0623\u0648\u0644"), /*#__PURE__*/React.createElement("th", {
-    className: "p-4 font-bold text-slate-500 text-sm text-center"
-  }, "\u0627\u0644\u062A\u062D\u0644\u064A\u0644 \u0627\u0644\u062B\u0627\u0646\u064A"), /*#__PURE__*/React.createElement("th", {
-    className: "p-4 font-bold text-slate-500 text-sm text-center"
-  }, "\u0627\u0644\u062A\u062D\u0644\u064A\u0644 \u0627\u0644\u062B\u0627\u0644\u062B"), /*#__PURE__*/React.createElement("th", {
-    className: "p-4 font-bold text-slate-500 text-sm text-center"
-  }, "\u0625\u062C\u0631\u0627\u0621"))), /*#__PURE__*/React.createElement("tbody", null, employeesList.map((emp, idx) => /*#__PURE__*/React.createElement("tr", {
-    key: idx,
-    className: "border-b border-slate-100 hover:bg-slate-50 transition-colors"
-  }, /*#__PURE__*/React.createElement("td", {
-    className: "p-4 font-bold text-slate-800 text-sm"
-  }, emp.name), /*#__PURE__*/React.createElement("td", {
-    className: "p-4 text-slate-600 text-sm"
-  }, emp.nationalId), /*#__PURE__*/React.createElement("td", {
-    className: "p-4 text-slate-600 text-sm",
-    dir: "ltr"
-  }, emp.phone || '-'), /*#__PURE__*/React.createElement("td", {
-    className: "p-4 text-center"
-  }, emp.form ? /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-check-circle text-emerald-500"
-  }) : /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-times-circle text-slate-300"
-  })), /*#__PURE__*/React.createElement("td", {
-    className: "p-4 text-center"
-  }, emp.a1 ? /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-check-circle text-emerald-500"
-  }) : /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-times-circle text-slate-300"
-  })), /*#__PURE__*/React.createElement("td", {
-    className: "p-4 text-center"
-  }, emp.a2 ? /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-check-circle text-emerald-500"
-  }) : /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-times-circle text-slate-300"
-  })), /*#__PURE__*/React.createElement("td", {
-    className: "p-4 text-center"
-  }, emp.a3 ? /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-check-circle text-emerald-500"
-  }) : /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-times-circle text-slate-300"
-  })), /*#__PURE__*/React.createElement("td", {
-    className: "p-4 text-center"
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => handleRetrieve(emp),
-    className: "bg-rose-100 text-rose-700 hover:bg-rose-200 px-4 py-1.5 rounded-lg font-bold text-xs transition-colors cursor-pointer"
-  }, "\u0627\u0633\u062A\u0631\u062C\u0627\u0639")))))))), employee ? /*#__PURE__*/React.createElement("div", {
-    className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden animate-fadeIn"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center"
-  }, /*#__PURE__*/React.createElement("h2", {
-    className: "text-xl font-bold text-slate-800 flex items-center gap-2"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "bg-rose-100 p-2 rounded-lg text-rose-600"
-  }, /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-notes-medical"
-  })), "\u0627\u0633\u062A\u0643\u0645\u0627\u0644 \u0627\u0644\u0627\u0633\u062A\u0645\u0627\u0631\u0629"), /*#__PURE__*/React.createElement("button", {
-    onClick: clearForm,
-    className: "text-slate-400 hover:text-slate-600 font-bold text-sm bg-slate-100 px-4 py-2 rounded-xl cursor-pointer"
-  }, /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-arrow-right"
-  }), " \u0639\u0648\u062F\u0629")), /*#__PURE__*/React.createElement("div", {
-    className: "p-6 md:p-8"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mb-6 bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
-    className: "text-slate-500 font-bold block mb-1 text-sm"
-  }, "\u0627\u0644\u0627\u0633\u0645"), /*#__PURE__*/React.createElement("span", {
-    className: "font-bold text-rose-900"
-  }, employee.name)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
-    className: "text-slate-500 font-bold block mb-1 text-sm"
-  }, "\u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0642\u0648\u0645\u064A"), /*#__PURE__*/React.createElement("span", {
-    className: "font-bold text-rose-900"
-  }, employee.nationalId)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
-    className: "text-slate-500 font-bold block mb-1 text-sm text-right"
-  }, "\u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646"), /*#__PURE__*/React.createElement("span", {
-    className: "font-bold text-rose-900",
-    dir: "ltr"
-  }, employee.phone || '-'))), /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-cols-1 md:grid-cols-2 gap-6"
-  }, renderUploadBox('استمارة الوخز', formImage, setFormImage), renderUploadBox('التحليل الأول', analysis1Image, setAnalysis1Image), renderUploadBox('التحليل الثاني', analysis2Image, setAnalysis2Image), renderUploadBox('التحليل الثالث', analysis3Image, setAnalysis3Image)), /*#__PURE__*/React.createElement("div", {
-    className: "mt-8 flex justify-end pt-6 border-t border-slate-100"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: handleSubmit,
-    className: "w-full sm:w-auto flex items-center justify-center gap-2 px-10 py-3.5 bg-rose-600 text-white rounded-xl hover:bg-rose-700 transition-colors font-bold shadow-md text-lg cursor-pointer"
-  }, /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-upload"
-  }), " \u062D\u0641\u0638 \u0627\u0644\u0645\u0633\u062A\u0646\u062F\u0627\u062A")))) : /*#__PURE__*/React.createElement("div", {
-    className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden animate-fadeIn"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "p-6 border-b border-slate-100 bg-slate-50/50"
-  }, /*#__PURE__*/React.createElement("h2", {
-    className: "text-xl font-bold text-slate-800 flex items-center gap-2"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "bg-rose-100 p-2 rounded-lg text-rose-600"
-  }, /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-search"
-  })), "\u0628\u062D\u062B \u0639\u0646 \u0639\u0627\u0645\u0644 \u0644\u0625\u0636\u0627\u0641\u0629 \u0627\u0633\u062A\u0645\u0627\u0631\u0629")), /*#__PURE__*/React.createElement("div", {
-    className: "p-6 md:p-8 flex flex-col md:flex-row gap-4 text-right"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "relative flex-1"
-  }, /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-id-card absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-  }), /*#__PURE__*/React.createElement("input", {
-    type: "text",
-    value: searchQuery,
-    onChange: e => setSearchQuery(e.target.value.replace(/[^0-9]/g, '')),
-    placeholder: "\u0623\u062F\u062E\u0644 \u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0642\u0648\u0645\u064A (14 \u0631\u0642\u0645)...",
-    maxLength: "14",
-    className: "w-full py-4 pr-11 pl-4 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/20 focus:border-rose-500 outline-none font-bold transition-all"
-  })), /*#__PURE__*/React.createElement("button", {
-    onClick: handleSearch,
-    disabled: isSearching || searchQuery.length !== 14,
-    className: "cursor-pointer md:w-auto w-full flex items-center justify-center gap-2 bg-slate-800 text-white px-8 py-4 rounded-xl font-bold hover:bg-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-  }, isSearching ? /*#__PURE__*/React.createElement("div", {
-    className: "w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"
-  }) : /*#__PURE__*/React.createElement("i", {
-    className: "fas fa-search"
-  }), /*#__PURE__*/React.createElement("span", null, "\u0628\u062D\u062B")))));
-};
-
 // ==========================================
 // المكون الرئيسي (Main App Component)
 // ==========================================
@@ -1257,95 +889,7 @@ var App = function App() {
       }
       return fetchEmployee;
     }(),
-    saveNeedlestick: function () {
-      var _saveNeedlestick = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee0(params) {
-        var buildQS, res, data, _res, _data, _t2, _t3;
-        return _regenerator().w(function (_context0) {
-          while (1) switch (_context0.p = _context0.n) {
-            case 0:
-              setIsLoading(true);
-              buildQS = function buildQS(obj) {
-                return Object.keys(obj).map(function (k) {
-                  return "".concat(encodeURIComponent(k), "=").concat(encodeURIComponent(obj[k] || ''));
-                }).join('&');
-              };
-              _context0.p = 1;
-              _context0.n = 2;
-              return fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(_objectSpread({
-                  action: 'saveNeedlestick'
-                }, params))
-              });
-            case 2:
-              res = _context0.v;
-              _context0.n = 3;
-              return res.json();
-            case 3:
-              data = _context0.v;
-              if (!(data.status === 'success')) {
-                _context0.n = 4;
-                break;
-              }
-              Swal.fire({
-                icon: 'success',
-                title: 'تم',
-                text: 'تم حفظ استمارة الوخز',
-                timer: 2000,
-                showConfirmButton: false
-              });
-              return _context0.a(2, true);
-            case 4:
-              _context0.n = 11;
-              break;
-            case 5:
-              _context0.p = 5;
-              _t2 = _context0.v;
-              _context0.p = 6;
-              _context0.n = 7;
-              return fetch("".concat(GOOGLE_SCRIPT_URL, "?action=saveNeedlestick&").concat(buildQS(params)));
-            case 7:
-              _res = _context0.v;
-              _context0.n = 8;
-              return _res.json();
-            case 8:
-              _data = _context0.v;
-              if (!(_data.status === 'success')) {
-                _context0.n = 9;
-                break;
-              }
-              Swal.fire({
-                icon: 'success',
-                title: 'تم',
-                text: 'تم حفظ استمارة الوخز',
-                timer: 2000,
-                showConfirmButton: false
-              });
-              return _context0.a(2, true);
-            case 9:
-              _context0.n = 11;
-              break;
-            case 10:
-              _context0.p = 10;
-              _t3 = _context0.v;
-              Swal.fire('خطأ', 'فشل حفظ البيانات', 'error');
-            case 11:
-              _context0.p = 11;
-              setIsLoading(false);
-              return _context0.f(11);
-            case 12:
-              return _context0.a(2, false);
-          }
-        }, _callee0, null, [[6, 10], [1, 5, 11, 12]]);
-      }));
-      function saveNeedlestick(_x5) {
-        return _saveNeedlestick.apply(this, arguments);
-      }
-      return saveNeedlestick;
-    }(),
+
     loadEmployees: function () {
       var _loadEmployees = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee1() {
         var res, data, _t4;
@@ -1665,8 +1209,6 @@ var App = function App() {
     className: "text-slate-800 font-bold text-lg"
   }, "\u062C\u0627\u0631\u064A \u0645\u0639\u0627\u0644\u062C\u0629 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A..."))), currentTab === 'vaccinations' && /*#__PURE__*/React.createElement(Vaccinations, {
     api: api
-  }), currentTab === 'injuries' && /*#__PURE__*/React.createElement(Injuries, {
-    api: api
   }), currentTab === 'sync_settings' && /*#__PURE__*/React.createElement(SyncSettings, {
     api: api
   }));
@@ -1676,16 +1218,176 @@ var App = function App() {
 // مكون إعدادات المزامنة مع Google Sheets (SyncSettings Component)
 // ==========================================
 var SyncSettings = function SyncSettings() {
-  const [activeSubTab, setActiveSubTab] = useState('employees');
   const [employeesText, setEmployeesText] = useState('');
-  const [needlesticksText, setNeedlesticksText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   // Parsed Employees
   const parsedEmployees = [];
   if (employeesText.trim()) {
     const lines = employeesText.split(/\r?\n/);
+    let headerIndex = -1;
+    let colMap = {
+      nationalId: 0,
+      name: 1,
+      category: 2,
+      phone: 3,
+      dose1: 4,
+      dose2: 5,
+      dose3: 6,
+      notes: 7
+    };
+
+    // Check first and second line for header row
+    let firstLineCells = [];
+    if (lines.length > 0) {
+      let cells = lines[0].split('\t');
+      if (cells.length === 1) {
+        if (lines[0].includes(',')) cells = lines[0].split(',');
+        else if (lines[0].includes(';')) cells = lines[0].split(';');
+      }
+      firstLineCells = cells.map(c => c.trim().replace(/^["']|["']$/g, ''));
+    }
+
+    let hasHeader = false;
+    let tempMap = { ...colMap };
+    let foundFields = 0;
+    
+    firstLineCells.forEach((cell, idx) => {
+      const c = cell.toLowerCase().trim();
+      if (c.includes('بطاقة') || c.includes('قومي') || c.includes('national') || c.includes('id') || c.includes('هوية') || c.includes('الرقم')) {
+        // Exclude serial numbers "م" or "مسلسل"
+        if (!c.includes('مسلسل') && c !== 'م' && c !== 'ت' && c !== 'الرقم') {
+          tempMap.nationalId = idx;
+          foundFields++;
+          hasHeader = true;
+        }
+      } else if (c.includes('الاسم') || c.includes('اسم') || c.includes('name')) {
+        tempMap.name = idx;
+        foundFields++;
+        hasHeader = true;
+      } else if (c.includes('فئة') || c.includes('وظيفة') || c.includes('قسم') || c.includes('category') || c.includes('job') || c.includes('المهنة') || c.includes('تخصص')) {
+        tempMap.category = idx;
+        foundFields++;
+        hasHeader = true;
+      } else if (c.includes('تليفون') || c.includes('هاتف') || c.includes('موبايل') || c.includes('phone') || c.includes('mobile')) {
+        tempMap.phone = idx;
+        foundFields++;
+        hasHeader = true;
+      } else if (c.includes('الأولى') || c.includes('الاولى') || c.includes('dose1') || c.includes('dose 1') || c.includes('الجرعة 1') || c.includes('الجرعه 1')) {
+        tempMap.dose1 = idx;
+        foundFields++;
+        hasHeader = true;
+      } else if (c.includes('الثانية') || c.includes('الثانيه') || c.includes('dose2') || c.includes('dose 2') || c.includes('الجرعة 2') || c.includes('الجرعه 2')) {
+        tempMap.dose2 = idx;
+        foundFields++;
+        hasHeader = true;
+      } else if (c.includes('الثالثة') || c.includes('الثالثه') || c.includes('dose3') || c.includes('dose 3') || c.includes('الجرعة 3') || c.includes('الجرعه 3')) {
+        tempMap.dose3 = idx;
+        foundFields++;
+        hasHeader = true;
+      } else if (c.includes('ملاحظات') || c.includes('notes') || c.includes('ملاحظه')) {
+        tempMap.notes = idx;
+        foundFields++;
+        hasHeader = true;
+      }
+    });
+
+    if (hasHeader && foundFields >= 2) {
+      colMap = tempMap;
+      headerIndex = 0;
+    } else {
+      // Analyze values of first few lines to auto-detect columns
+      let sampleRows = [];
+      for (let i = 0; i < Math.min(lines.length, 5); i++) {
+        let cells = lines[i].split('\t');
+        if (cells.length === 1) {
+          if (lines[i].includes(',')) cells = lines[i].split(',');
+          else if (lines[i].includes(';')) cells = lines[i].split(';');
+        }
+        const cleaned = cells.map(c => c.trim().replace(/^["']|["']$/g, ''));
+        if (cleaned.length > 0 && cleaned.some(x => x)) {
+          sampleRows.push(cleaned);
+        }
+      }
+
+      if (sampleRows.length > 0) {
+        let numCols = Math.max(...sampleRows.map(r => r.length));
+        let colScores = Array.from({ length: numCols }, () => ({
+          nidScore: 0,
+          nameScore: 0,
+          catScore: 0,
+          phoneScore: 0,
+          dateScore: 0
+        }));
+
+        sampleRows.forEach(row => {
+          row.forEach((cell, idx) => {
+            if (!cell) return;
+            const cleanDigits = cell.replace(/\s/g, '');
+            if (/^\d{14}$/.test(cleanDigits)) {
+              colScores[idx].nidScore += 10;
+            } else if (/^\d{10,16}$/.test(cleanDigits)) {
+              colScores[idx].nidScore += 5;
+            }
+
+            const hasLetters = /[\u0600-\u06FFa-zA-Z]/.test(cell);
+            const hasDigits = /\d/.test(cell);
+            const wordCount = cell.trim().split(/\s+/).length;
+            if (hasLetters && !hasDigits && wordCount >= 3) {
+              colScores[idx].nameScore += 10;
+            } else if (hasLetters && !hasDigits && wordCount >= 2) {
+              colScores[idx].nameScore += 5;
+            }
+
+            const lowerCell = cell.toLowerCase();
+            if (lowerCell.includes('طبيب') || lowerCell.includes('أطباء') || lowerCell.includes('تمريض') || lowerCell.includes('إداري') || lowerCell.includes('فني') || lowerCell.includes('عامل') || lowerCell.includes('doctor') || lowerCell.includes('nurse')) {
+              colScores[idx].catScore += 10;
+            }
+
+            if (/^01\d{9}$/.test(cleanDigits)) {
+              colScores[idx].phoneScore += 10;
+            }
+
+            if (cell.includes('/') || cell.includes('-') || cell === 'تم') {
+              colScores[idx].dateScore += 5;
+            }
+          });
+        });
+
+        let bestNidCol = -1; let maxNid = -1;
+        let bestNameCol = -1; let maxName = -1;
+        let bestCatCol = -1; let maxCat = -1;
+        let bestPhoneCol = -1; let maxPhone = -1;
+
+        colScores.forEach((scores, idx) => {
+          if (scores.nidScore > maxNid) { maxNid = scores.nidScore; bestNidCol = idx; }
+          if (scores.nameScore > maxName) { maxName = scores.nameScore; bestNameCol = idx; }
+          if (scores.catScore > maxCat) { maxCat = scores.catScore; bestCatCol = idx; }
+          if (scores.phoneScore > maxPhone) { maxPhone = scores.phoneScore; bestPhoneCol = idx; }
+        });
+
+        if (bestNidCol !== -1 && maxNid > 0) colMap.nationalId = bestNidCol;
+        if (bestNameCol !== -1 && maxName > 0) colMap.name = bestNameCol;
+        if (bestCatCol !== -1 && maxCat > 0) colMap.category = bestCatCol;
+        if (bestPhoneCol !== -1 && maxPhone > 0) colMap.phone = bestPhoneCol;
+
+        let dateCols = [];
+        colScores.forEach((scores, idx) => {
+          if (idx !== colMap.nationalId && idx !== colMap.name && idx !== colMap.category && idx !== colMap.phone) {
+            if (scores.dateScore > 0) {
+              dateCols.push(idx);
+            }
+          }
+        });
+        dateCols.sort((a, b) => a - b);
+        if (dateCols.length >= 1) colMap.dose1 = dateCols[0];
+        if (dateCols.length >= 2) colMap.dose2 = dateCols[1];
+        if (dateCols.length >= 3) colMap.dose3 = dateCols[2];
+      }
+    }
+
     for (let i = 0; i < lines.length; i++) {
+      if (i === headerIndex) continue;
       const line = lines[i].trim();
       if (!line) continue;
       let cells = line.split('\t');
@@ -1694,47 +1396,24 @@ var SyncSettings = function SyncSettings() {
         else if (line.includes(';')) cells = line.split(';');
       }
       const cleaned = cells.map(c => c.trim().replace(/^["']|["']$/g, ''));
-      const nid = cleaned[0] || '';
+      
+      let nid = cleaned[colMap.nationalId] || '';
+      const name = cleaned[colMap.name] || '';
+      
+      if (!nid && name) {
+        nid = 'TEMP_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+      }
+
       if (nid && nid.toLowerCase() !== 'رقم البطاقة' && nid.toLowerCase() !== 'national id' && nid.toLowerCase() !== 'nationalid' && nid.toLowerCase() !== 'id') {
         parsedEmployees.push({
           nationalId: nid,
-          name: cleaned[1] || '',
-          category: cleaned[2] || '',
-          phone: cleaned[3] || '',
-          dose1: cleaned[4] || '',
-          dose2: cleaned[5] || '',
-          dose3: cleaned[6] || '',
-          notes: cleaned[7] || ''
-        });
-      }
-    }
-  }
-
-  // Parsed Needlesticks
-  const parsedNeedlesticks = [];
-  if (needlesticksText.trim()) {
-    const linesNs = needlesticksText.split(/\r?\n/);
-    for (let j = 0; j < linesNs.length; j++) {
-      const lineNs = linesNs[j].trim();
-      if (!lineNs) continue;
-      let cellsNs = lineNs.split('\t');
-      if (cellsNs.length === 1) {
-        if (lineNs.includes(',')) cellsNs = lineNs.split(',');
-        else if (lineNs.includes(';')) cellsNs = lineNs.split(';');
-      }
-      const cleanedNs = cellsNs.map(c => c.trim().replace(/^["']|["']$/g, ''));
-      const nid = cleanedNs[0] || '';
-      if (nid && nid.toLowerCase() !== 'رقم البطاقة' && nid.toLowerCase() !== 'national id' && nid.toLowerCase() !== 'nationalid' && nid.toLowerCase() !== 'id') {
-        parsedNeedlesticks.push({
-          nationalId: nid,
-          name: cleanedNs[1] || '',
-          date: cleanedNs[2] || '',
-          time: cleanedNs[3] || '',
-          location: cleanedNs[4] || '',
-          tool: cleanedNs[5] || '',
-          description: cleanedNs[6] || '',
-          vaccineStatus: cleanedNs[7] || '',
-          timestamp: cleanedNs[8] || ''
+          name: name,
+          category: cleaned[colMap.category] || '',
+          phone: cleaned[colMap.phone] || '',
+          dose1: cleaned[colMap.dose1] || '',
+          dose2: cleaned[colMap.dose2] || '',
+          dose3: cleaned[colMap.dose3] || '',
+          notes: cleaned[colMap.notes] || ''
         });
       }
     }
@@ -1800,88 +1479,18 @@ var SyncSettings = function SyncSettings() {
     });
   };
 
-  const handleImportNeedlesticks = function() {
-    if (parsedNeedlesticks.length === 0) {
-      Swal.fire('تنبيه', 'لا توجد بيانات صالحة للاستيراد. يرجى التأكد من لصق البيانات بشكل صحيح.', 'warning');
-      return;
-    }
-    
-    Swal.fire({
-      title: 'اختر طريقة حفظ حوادث الوخز',
-      html: '<div class="text-right text-sm text-slate-600 mb-2 leading-relaxed font-semibold">يرجى تحديد طريقة الحفظ المناسبة لـ (' + parsedNeedlesticks.length + ') سجل وخز:</div>',
-      icon: 'question',
-      input: 'radio',
-      inputOptions: {
-        'merge': 'الإضافة والدمج مع السجلات الحالية دون حذف القديم',
-        'replace': 'حذف جميع سجلات حوادث الوخز الحالية واستبدالها بالقائمة الجديدة بالكامل'
-      },
-      inputValue: 'merge',
-      showCancelButton: true,
-      confirmButtonColor: '#059669',
-      cancelButtonColor: '#dc2626',
-      confirmButtonText: 'نعم، استورد الآن',
-      cancelButtonText: 'إلغاء',
-      inputValidator: function(value) {
-        if (!value) {
-          return 'يجب اختيار أحد الخيارين للمتابعة!';
-        }
-      }
-    }).then(function(result) {
-      if (result.isConfirmed) {
-        const mode = result.value;
-        setIsSaving(true);
-        fetch('/api?action=importNeedlesticks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ needlesticks: parsedNeedlesticks, mode: mode })
-        })
-        .then(res => res.json())
-        .then(data => {
-          setIsSaving(false);
-          if (data.status === 'success') {
-            Swal.fire({
-              icon: 'success',
-              title: 'تم الاستيراد بنجاح',
-              text: data.message,
-              confirmButtonText: 'حسناً',
-              confirmButtonColor: '#059669'
-            });
-            setNeedlesticksText('');
-          } else {
-            Swal.fire('خطأ', data.message || 'فشل الاستيراد', 'error');
-          }
-        })
-        .catch(err => {
-          setIsSaving(false);
-          console.error(err);
-          Swal.fire('خطأ', 'حدث خطأ في الاتصال بالخادم', 'error');
-        });
-      }
-    });
-  };
-
   return React.createElement("div", { className: "space-y-6 animate-fadeIn text-right", dir: "rtl" },
     React.createElement("div", { className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6" },
       React.createElement("div", { className: "flex items-center gap-3 mb-6" },
         React.createElement("div", { className: "bg-emerald-100 p-2.5 rounded-xl text-emerald-600" },
           React.createElement("i", { className: "fas fa-paste text-2xl" })
         ),
-        React.createElement("h2", { className: "font-bold text-xl text-slate-800" }, "استيراد البيانات بالنسخ واللصق من Google Sheets / Excel")
+        React.createElement("h2", { className: "font-bold text-xl text-slate-800" }, "استيراد بيانات الموظفين بالنسخ واللصق من Google Sheets / Excel")
       ),
       React.createElement("p", { className: "text-slate-600 mb-6 text-sm leading-relaxed font-semibold" },
         "يمكنك الآن استيراد البيانات بسهولة دون الحاجة لتغيير إعدادات مشاركة الرابط أو مواجهة مشاكل الاتصال. فقط انسخ الخلايا من جدول البيانات (Google Sheets أو Excel) والصقها هنا مباشرة لتحديث قاعدة البيانات."
       ),
-      React.createElement("div", { className: "flex border-b border-slate-200 mb-6" },
-        React.createElement("button", {
-          onClick: function() { setActiveSubTab('employees'); },
-          className: "px-6 py-3 font-bold text-sm border-b-2 transition-colors " + (activeSubTab === 'employees' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800')
-        }, "1. جدول الموظفين (vaccine_employees)"),
-        React.createElement("button", {
-          onClick: function() { setActiveSubTab('needlesticks'); },
-          className: "px-6 py-3 font-bold text-sm border-b-2 transition-colors " + (activeSubTab === 'needlesticks' ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-800')
-        }, "2. جدول حوادث الوخز (vaccine_needlesticks)")
-      ),
-      activeSubTab === 'employees' ? React.createElement("div", { className: "space-y-4" },
+      React.createElement("div", { className: "space-y-4" },
         React.createElement("div", { className: "bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-800 text-sm leading-relaxed font-medium" },
           React.createElement("i", { className: "fas fa-info-circle ml-2" }),
           "الترتيب المطلوب للأعمدة من اليمين إلى اليسار (أو من اليسار لليمين):",
@@ -1934,74 +1543,6 @@ var SyncSettings = function SyncSettings() {
             className: "bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-8 py-3 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
           }, React.createElement("i", { className: "fas fa-cloud-upload-alt" }), isSaving ? "جاري الاستيراد..." : "حفظ الموظفين في قاعدة البيانات")
         )
-      ) : React.createElement("div", { className: "space-y-4" },
-        React.createElement("div", { className: "bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-800 text-sm leading-relaxed font-medium" },
-          React.createElement("i", { className: "fas fa-info-circle ml-2" }),
-          "الترتيب المطلوب للأعمدة من اليمين إلى اليسار (أو من اليسار لليمين):",
-          React.createElement("strong", null, " رقم البطاقة، الاسم، التاريخ، الوقت، مكان الإصابة، الأداة المستخدمة، التفاصيل، حالة التطعيم، طابع زمني.")
-        ),
-        React.createElement("textarea", {
-          rows: 8,
-          value: needlesticksText,
-          onChange: function(e) { setNeedlesticksText(e.target.value); },
-          placeholder: "قم بنسخ الخلايا من Google Sheets (الصفوف والأعمدة) ثم الصقها هنا...",
-          className: "block w-full px-4 py-3 border border-slate-300 rounded-2xl focus:ring-emerald-500 focus:border-emerald-500 bg-slate-50 font-mono text-xs text-left",
-          dir: "ltr"
-        }),
-        parsedNeedlesticks.length > 0 && React.createElement("div", { className: "bg-slate-50 rounded-2xl p-4 border border-slate-200" },
-          React.createElement("h3", { className: "font-bold text-sm text-slate-700 mb-3" }, "معاينة سجلات الوخز المكتشفة (" + parsedNeedlesticks.length + " سجل):"),
-          React.createElement("div", { className: "overflow-x-auto rounded-xl border border-slate-200" },
-            React.createElement("table", { className: "min-w-full divide-y divide-slate-200 text-sm text-right" },
-              React.createElement("thead", { className: "bg-slate-100 text-slate-700 font-bold" },
-                React.createElement("tr", null,
-                  React.createElement("th", { className: "px-4 py-2" }, "رقم البطاقة"),
-                  React.createElement("th", { className: "px-4 py-2" }, "الاسم"),
-                  React.createElement("th", { className: "px-4 py-2" }, "التاريخ"),
-                  React.createElement("th", { className: "px-4 py-2" }, "مكان الإصابة"),
-                  React.createElement("th", { className: "px-4 py-2" }, "الأداة"),
-                  React.createElement("th", { className: "px-4 py-2" }, "الحالة التطعيمية")
-                )
-              ),
-              React.createElement("tbody", { className: "divide-y divide-slate-200 text-slate-600 font-semibold bg-white" },
-                parsedNeedlesticks.slice(0, 5).map(function(ns, idx) {
-                  return React.createElement("tr", { key: idx },
-                    React.createElement("td", { className: "px-4 py-2 font-mono text-xs" }, ns.nationalId),
-                    React.createElement("td", { className: "px-4 py-2" }, ns.name),
-                    React.createElement("td", { className: "px-4 py-2" }, ns.date),
-                    React.createElement("td", { className: "px-4 py-2" }, ns.location),
-                    React.createElement("td", { className: "px-4 py-2" }, ns.tool),
-                    React.createElement("td", { className: "px-4 py-2" }, ns.vaccineStatus)
-                  );
-                }),
-                parsedNeedlesticks.length > 5 && React.createElement("tr", null,
-                  React.createElement("td", { colSpan: 6, className: "px-4 py-2 text-center text-xs text-slate-400 font-bold" }, "...و " + (parsedNeedlesticks.length - 5) + " سجل آخرين ...")
-                )
-              )
-            )
-          )
-        ),
-        React.createElement("div", { className: "pt-2" },
-          React.createElement("button", {
-            onClick: handleImportNeedlesticks,
-            disabled: isSaving || parsedNeedlesticks.length === 0,
-            className: "bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-8 py-3 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
-          }, React.createElement("i", { className: "fas fa-cloud-upload-alt" }), isSaving ? "جاري الاستيراد..." : "حفظ سجلات الوخز في قاعدة البيانات")
-        )
-      )
-    ),
-    React.createElement("div", { className: "bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6" },
-      React.createElement("h3", { className: "font-bold text-lg text-slate-800 mb-4 flex items-center gap-2" },
-        React.createElement("i", { className: "fas fa-question-circle text-emerald-600" }),
-        "خطوات نسخ ولصق البيانات بالتفصيل:"
-      ),
-      React.createElement("ol", { className: "list-decimal list-inside space-y-3 text-slate-600 text-sm leading-relaxed text-right font-semibold", dir: "rtl" },
-        React.createElement("li", null, "افتح ملف الـ Google Sheets أو Excel الخاص بك."),
-        React.createElement("li", null, "انتقل لـ ورقة العمل الأولى (مثلا: vaccine_employees)."),
-        React.createElement("li", null, "قم بتحديد كامل البيانات (بما فيها الصف الأول للعناوين) بالضغط على زر المربع فارغ الزاوية، أو بتحديد الخلايا يدوياً."),
-        React.createElement("li", null, "انسخ الخلايا بالضغط على ", React.createElement("kbd", { className: "bg-slate-100 px-1.5 py-0.5 rounded border border-slate-300 font-bold text-xs" }, "Ctrl + C")),
-        React.createElement("li", null, "عد هنا واختبر التبويب المناسب، ثم اضغط بالماوس داخل المربع الكبير والصق بالضغط على ", React.createElement("kbd", { className: "bg-slate-100 px-1.5 py-0.5 rounded border border-slate-300 font-bold text-xs" }, "Ctrl + V")),
-        React.createElement("li", null, "تأكد من المعاينة التلقائية أنها تظهر الأسماء والبيانات بشكل صحيح في الجدول الأسفل."),
-        React.createElement("li", null, "اضغط على زر الحفظ باللون الأخضر لحفظ وتثبيت البيانات بضغطة واحدة!")
       )
     )
   );

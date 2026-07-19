@@ -99,13 +99,6 @@ app.all("/api", async (req, res) => {
           sql: "UPDATE vaccine_employees SET nationalId=?, name=?, category=?, phone=?, dose1=?, dose2=?, dose3=?, notes=? WHERE nationalId=?",
           args: [nationalId, name || "", category || "", phone || "", dose1 || "", dose2 || "", dose3 || "", notes || "", targetId]
         });
-        
-        if (nationalId !== targetId) {
-          await db.execute({
-            sql: "UPDATE vaccine_needlesticks SET nationalId=? WHERE nationalId=?",
-            args: [nationalId, targetId]
-          });
-        }
       } else {
         await db.execute({
           sql: "INSERT INTO vaccine_employees (nationalId, name, category, phone, dose1, dose2, dose3, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -145,10 +138,6 @@ app.all("/api", async (req, res) => {
         sql: "DELETE FROM vaccine_employees WHERE nationalId = ?",
         args: [params.nationalId]
       });
-      await db.execute({
-        sql: "DELETE FROM vaccine_needlesticks WHERE nationalId = ?",
-        args: [params.nationalId]
-      });
       res.json({ status: "success", message: "Employee deleted" });
     }
     else if (action === "deleteMultipleEmployees") {
@@ -157,10 +146,6 @@ app.all("/api", async (req, res) => {
         for (const id of nationalIds) {
           await db.execute({
             sql: "DELETE FROM vaccine_employees WHERE nationalId = ?",
-            args: [id]
-          });
-          await db.execute({
-            sql: "DELETE FROM vaccine_needlesticks WHERE nationalId = ?",
             args: [id]
           });
         }
@@ -183,7 +168,11 @@ app.all("/api", async (req, res) => {
       // Deduplicate by nationalId, keeping the last occurrence
       const dedupedMap = new Map<string, any>();
       for (const emp of employeesArray) {
-        const nationalId = String(emp.nationalId || "").trim();
+        let nationalId = String(emp.nationalId || "").trim();
+        const name = String(emp.name || "").trim();
+        if (!nationalId && name) {
+          nationalId = 'TEMP_IMPORT_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        }
         if (nationalId) {
           dedupedMap.set(nationalId, emp);
         }
@@ -207,52 +196,6 @@ app.all("/api", async (req, res) => {
         insertedCount++;
       }
       res.json({ status: "success", message: `تم استيراد ${insertedCount} موظف بنجاح`, count: insertedCount });
-    }
-    else if (action === "importNeedlesticks") {
-      const needlesticksArray = typeof params.needlesticks === "string" ? JSON.parse(params.needlesticks) : params.needlesticks;
-      if (!needlesticksArray || !Array.isArray(needlesticksArray)) {
-        res.json({ status: "error", message: "بيانات حوادث الوخز غير صالحة" });
-        return;
-      }
-      
-      const mode = params.mode || "replace";
-      if (mode === "replace") {
-        // Clear existing first
-        await db.execute("DELETE FROM vaccine_needlesticks");
-      }
-      
-      let insertedCount = 0;
-      for (const ns of needlesticksArray) {
-        const nationalId = String(ns.nationalId || "").trim();
-        if (!nationalId) continue;
-        await db.execute({
-          sql: "INSERT INTO vaccine_needlesticks (nationalId, name, date, time, location, tool, description, vaccineStatus, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          args: [
-            nationalId,
-            String(ns.name || "").trim(),
-            String(ns.date || "").trim(),
-            String(ns.time || "").trim(),
-            String(ns.location || "").trim(),
-            String(ns.tool || "").trim(),
-            String(ns.description || "").trim(),
-            String(ns.vaccineStatus || "").trim(),
-            String(ns.timestamp || "").trim()
-          ]
-        });
-        insertedCount++;
-      }
-      res.json({ status: "success", message: `تم استيراد ${insertedCount} استمارة وخز بنجاح`, count: insertedCount });
-    }
-    else if (action === "saveNeedlestick") {
-      const timestamp = new Date().toISOString();
-      await db.execute({
-        sql: "INSERT INTO vaccine_needlesticks (nationalId, name, date, time, location, tool, description, vaccineStatus, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        args: [
-          params.nationalId, params.name, params.date, params.time, 
-          params.location, params.tool, params.description, params.vaccineStatus, timestamp
-        ]
-      });
-      res.json({ status: "success", message: "Form saved" });
     }
     else if (action === "getSyncSettings") {
       const result = await db.execute({

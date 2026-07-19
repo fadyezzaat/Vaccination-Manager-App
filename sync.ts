@@ -78,20 +78,62 @@ export async function syncGoogleSheets(customSheetId?: string) {
 
     await db.execute("DELETE FROM vaccine_employees");
 
+    // Auto-map keys based on column headers
+    const firstRow = empRecords[0];
+    const keys = firstRow ? Object.keys(firstRow) : [];
+    
+    let keyMap = {
+      nationalId: keys[0] || "",
+      name: keys[1] || "",
+      category: keys[2] || "",
+      phone: keys[3] || "",
+      dose1: keys[4] || "",
+      dose2: keys[5] || "",
+      dose3: keys[6] || "",
+      notes: keys[7] || ""
+    };
+
+    for (const k of keys) {
+      const lowerK = k.toLowerCase().trim();
+      if (lowerK.includes('بطاقة') || lowerK.includes('قومي') || lowerK.includes('national') || lowerK.includes('id')) {
+        // Exclude serial numbers "م" or "مسلسل"
+        if (!lowerK.includes('مسلسل') && lowerK !== 'م' && lowerK !== 'ت') {
+          keyMap.nationalId = k;
+        }
+      } else if (lowerK.includes('الاسم') || lowerK.includes('اسم') || lowerK.includes('name')) {
+        keyMap.name = k;
+      } else if (lowerK.includes('فئة') || lowerK.includes('وظيفة') || lowerK.includes('قسم') || lowerK.includes('category') || lowerK.includes('job') || lowerK.includes('المهنة')) {
+        keyMap.category = k;
+      } else if (lowerK.includes('تليفون') || lowerK.includes('هاتف') || lowerK.includes('موبايل') || lowerK.includes('phone') || lowerK.includes('mobile')) {
+        keyMap.phone = k;
+      } else if (lowerK.includes('الأولى') || lowerK.includes('الاولى') || lowerK.includes('dose1') || lowerK.includes('dose 1') || lowerK.includes('الجرعة 1') || lowerK.includes('الجرعه 1')) {
+        keyMap.dose1 = k;
+      } else if (lowerK.includes('الثانية') || lowerK.includes('الثانيه') || lowerK.includes('dose2') || lowerK.includes('dose 2') || lowerK.includes('الجرعة 2') || lowerK.includes('الجرعه 2')) {
+        keyMap.dose2 = k;
+      } else if (lowerK.includes('الثالثة') || lowerK.includes('الثالثه') || lowerK.includes('dose3') || lowerK.includes('dose 3') || lowerK.includes('الجرعة 3') || lowerK.includes('الجرعه 3')) {
+        keyMap.dose3 = k;
+      } else if (lowerK.includes('ملاحظات') || lowerK.includes('notes') || lowerK.includes('ملاحظه')) {
+        keyMap.notes = k;
+      }
+    }
+
     // Deduplicate by nationalId, keeping the last occurrence
     const dedupedMap = new Map<string, any>();
     for (const row of empRecords) {
-      const keys = Object.keys(row);
-      if (keys.length === 0) continue;
-      const nationalId = keys[0] ? String(row[keys[0]] || "").trim() : "";
+      let nationalId = keyMap.nationalId ? String(row[keyMap.nationalId] || "").trim() : "";
+      const name = keyMap.name ? String(row[keyMap.name] || "").trim() : "";
+      
+      if (!nationalId && name) {
+        nationalId = 'TEMP_SYNC_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+      }
+
       if (nationalId && nationalId !== 'رقم البطاقة' && nationalId !== 'National ID') {
-        const name = keys[1] ? String(row[keys[1]] || "").trim() : "";
-        const category = keys[2] ? String(row[keys[2]] || "").trim() : "";
-        const phone = keys[3] ? String(row[keys[3]] || "").trim() : "";
-        const dose1 = keys[4] ? String(row[keys[4]] || "").trim() : "";
-        const dose2 = keys[5] ? String(row[keys[5]] || "").trim() : "";
-        const dose3 = keys[6] ? String(row[keys[6]] || "").trim() : "";
-        const notes = keys[7] ? String(row[keys[7]] || "").trim() : "";
+        const category = keyMap.category ? String(row[keyMap.category] || "").trim() : "";
+        const phone = keyMap.phone ? String(row[keyMap.phone] || "").trim() : "";
+        const dose1 = keyMap.dose1 ? String(row[keyMap.dose1] || "").trim() : "";
+        const dose2 = keyMap.dose2 ? String(row[keyMap.dose2] || "").trim() : "";
+        const dose3 = keyMap.dose3 ? String(row[keyMap.dose3] || "").trim() : "";
+        const notes = keyMap.notes ? String(row[keyMap.notes] || "").trim() : "";
         
         dedupedMap.set(nationalId, { name, category, phone, dose1, dose2, dose3, notes });
       }
@@ -107,52 +149,8 @@ export async function syncGoogleSheets(customSheetId?: string) {
     }
     console.log(`Synced ${empCount} records into vaccine_employees.`);
 
-    // 2. Sync vaccine_needlesticks
-    const nsUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=vaccine_needlesticks`;
-    const nsResponse = await fetch(nsUrl);
-    
-    let nsCount = 0;
-    if (nsResponse.ok) {
-      const nsCsvText = await nsResponse.text();
-      // Only parse if it's not HTML error page
-      if (!nsCsvText.includes("html") && !nsCsvText.includes("<!DOCTYPE")) {
-        if (nsCsvText.includes("google.visualization.Query.setResponse") || nsCsvText.includes('"status":"error"')) {
-          const match = nsCsvText.match(/"message"\s*:\s*"([^"]+)"/);
-          const googleMsg = match ? match[1] : "الجدول غير موجود أو غير صالح";
-          throw new Error(`خطأ في ورقة العمل الثانية: ${googleMsg}. يرجى التأكد من تسمية الورقة الثانية (Tab 2) في ملف Google Sheets الخاص بك باسم "vaccine_needlesticks" باللغة الإنجليزية تماماً.`);
-        }
-        
-        const nsRecords = parse(nsCsvText, { columns: true, skip_empty_lines: true });
-
-        await db.execute("DELETE FROM vaccine_needlesticks");
-
-        for (const row of nsRecords) {
-          const keys = Object.keys(row);
-          if (keys.length === 0) continue;
-          const nationalId = keys[0] ? String(row[keys[0]] || "").trim() : "";
-          const name = keys[1] ? String(row[keys[1]] || "").trim() : "";
-          const date = keys[2] ? String(row[keys[2]] || "").trim() : "";
-          const time = keys[3] ? String(row[keys[3]] || "").trim() : "";
-          const location = keys[4] ? String(row[keys[4]] || "").trim() : "";
-          const tool = keys[5] ? String(row[keys[5]] || "").trim() : "";
-          const description = keys[6] ? String(row[keys[6]] || "").trim() : "";
-          const vaccineStatus = keys[7] ? String(row[keys[7]] || "").trim() : "";
-          const timestamp = keys[8] ? String(row[keys[8]] || "").trim() : "";
-
-          if (nationalId && nationalId !== 'رقم البطاقة' && nationalId !== 'National ID') {
-            await db.execute({
-              sql: "INSERT INTO vaccine_needlesticks (nationalId, name, date, time, location, tool, description, vaccineStatus, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-              args: [nationalId, name, date, time, location, tool, description, vaccineStatus, timestamp]
-            });
-            nsCount++;
-          }
-        }
-        console.log(`Synced ${nsCount} records into vaccine_needlesticks.`);
-      }
-    }
-
     console.log("Automatic sync from Google Sheets completed successfully!");
-    return { status: "success", empCount, nsCount };
+    return { status: "success", empCount };
   } catch (error: any) {
     console.error("Failed to sync from Google Sheets:", error);
     throw new Error(error.message || "حدث خطأ أثناء الاتصال بجداول بيانات جوجل.");

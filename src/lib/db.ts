@@ -25,21 +25,6 @@ export async function createTables() {
   `);
 
   await db.execute(`
-    CREATE TABLE IF NOT EXISTS vaccine_needlesticks (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nationalId TEXT,
-      name TEXT,
-      date TEXT,
-      time TEXT,
-      location TEXT,
-      tool TEXT,
-      description TEXT,
-      vaccineStatus TEXT,
-      timestamp TEXT
-    );
-  `);
-
-  await db.execute(`
     CREATE TABLE IF NOT EXISTS vaccine_settings (
       key TEXT PRIMARY KEY,
       value TEXT
