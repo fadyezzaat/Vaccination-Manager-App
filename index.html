@@ -2292,7 +2292,18 @@ var Schedule = function Schedule(_refS) {
         return;
       }
 
-      if (!emp.dose1 || emp.dose1.toString().trim() === '') return;
+      if (!emp.dose1 || emp.dose1.toString().trim() === '') {
+        items.push({
+          employee: emp,
+          doseType: 'dose1',
+          doseLabel: 'الجرعة الأولى',
+          dueDate: new Date(1970, 0, 1),
+          dueDateStr: '',
+          isOverdue: true,
+          isDueThisMonth: false
+        });
+        return;
+      }
 
       var d1Str = emp.dose1.toString().trim();
       if (d1Str.includes('T')) d1Str = d1Str.split('T')[0];
@@ -2401,6 +2412,7 @@ var Schedule = function Schedule(_refS) {
       total: scheduleItems.length,
       dueThisMonth: 0,
       overdue: 0,
+      dose1: 0,
       dose2: 0,
       dose3: 0
     };
@@ -2408,6 +2420,7 @@ var Schedule = function Schedule(_refS) {
     scheduleItems.forEach(function (item) {
       if (item.isDueThisMonth) counts.dueThisMonth++;
       if (item.isOverdue) counts.overdue++;
+      if (item.doseType === 'dose1') counts.dose1++;
       if (item.doseType === 'dose2') counts.dose2++;
       if (item.doseType === 'dose3') counts.dose3++;
     });
@@ -2522,7 +2535,7 @@ var Schedule = function Schedule(_refS) {
       )
     ),
 
-    React.createElement("div", { className: "grid grid-cols-2 lg:grid-cols-5 gap-4 no-print" },
+    React.createElement("div", { className: "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 no-print" },
       React.createElement("div", { className: "bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4" },
         React.createElement("div", { className: "bg-blue-50 text-blue-600 p-3 rounded-xl" }, React.createElement("i", { className: "fas fa-users text-lg" })),
         React.createElement("div", { className: "text-right" },
@@ -2542,6 +2555,13 @@ var Schedule = function Schedule(_refS) {
         React.createElement("div", { className: "text-right" },
           React.createElement("div", { className: "text-xs text-slate-400 font-bold" }, "\u0645\u062A\u0623\u062E\u0631\u064A\u0646"),
           React.createElement("div", { className: "text-xl font-black text-rose-600" }, stats.overdue)
+        )
+      ),
+      React.createElement("div", { className: "bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4" },
+        React.createElement("div", { className: "bg-pink-50 text-pink-600 p-3 rounded-xl" }, React.createElement("i", { className: "fas fa-syringe text-lg" })),
+        React.createElement("div", { className: "text-right" },
+          React.createElement("div", { className: "text-xs text-slate-400 font-bold" }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649"),
+          React.createElement("div", { className: "text-xl font-black text-pink-600" }, stats.dose1)
         )
       ),
       React.createElement("div", { className: "bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4" },
@@ -2593,6 +2613,7 @@ var Schedule = function Schedule(_refS) {
           className: "w-full py-3 pr-11 pl-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-bold text-slate-700 appearance-none bg-white shadow-sm cursor-pointer"
         },
           React.createElement("option", { value: "all" }, "\u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u0627\u0644\u0645\u0633\u062E\u0642\u0629"),
+          React.createElement("option", { value: "dose1" }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649 \u0641\u0642\u0637"),
           React.createElement("option", { value: "dose2" }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629 \u0641\u0642\u0637"),
           React.createElement("option", { value: "dose3" }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629 \u0641\u0642\u0637")
         )
