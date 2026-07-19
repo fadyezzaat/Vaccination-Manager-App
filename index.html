@@ -1224,6 +1224,7 @@ var SyncSettings = function SyncSettings() {
   // Parsed Employees
   const parsedEmployees = [];
   if (employeesText.trim()) {
+    const seenIds = new Set();
     const lines = employeesText.split(/\r?\n/);
     let headerIndex = -1;
     let colMap = {
@@ -1397,14 +1398,28 @@ var SyncSettings = function SyncSettings() {
       }
       const cleaned = cells.map(c => c.trim().replace(/^["']|["']$/g, ''));
       
-      let nid = cleaned[colMap.nationalId] || '';
-      const name = cleaned[colMap.name] || '';
+      let nid = (cleaned[colMap.nationalId] || '').trim();
+      const name = (cleaned[colMap.name] || '').trim();
       
-      if (!nid && name) {
-        nid = 'TEMP_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+      if (nid && (nid.toLowerCase() === 'رقم البطاقة' || nid.toLowerCase() === 'national id' || nid.toLowerCase() === 'nationalid' || nid.toLowerCase() === 'id')) {
+        continue;
       }
 
-      if (nid && nid.toLowerCase() !== 'رقم البطاقة' && nid.toLowerCase() !== 'national id' && nid.toLowerCase() !== 'nationalid' && nid.toLowerCase() !== 'id') {
+      const isPlaceholder = !nid || 
+                            ['-', 'لا يوجد', 'بدون', '0', 'none', 'n/a', 'na', 'null', 'undefined', '.', 'مكرر', 'تحت الطلب', 'مؤقت', 'مجهول'].includes(nid) ||
+                            nid.length < 3;
+
+      if (isPlaceholder || seenIds.has(nid)) {
+        const prefix = isPlaceholder ? 'TEMP_' : 'DUP_' + nid + '_';
+        let uniqueId = prefix + Math.random().toString(36).substr(2, 6).toUpperCase();
+        while (seenIds.has(uniqueId)) {
+          uniqueId = prefix + Math.random().toString(36).substr(2, 6).toUpperCase();
+        }
+        nid = uniqueId;
+      }
+
+      if (nid) {
+        seenIds.add(nid);
         parsedEmployees.push({
           nationalId: nid,
           name: name,

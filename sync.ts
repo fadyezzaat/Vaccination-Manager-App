@@ -119,15 +119,30 @@ export async function syncGoogleSheets(customSheetId?: string) {
 
     // Deduplicate by nationalId, keeping the last occurrence
     const dedupedMap = new Map<string, any>();
+    const seenIds = new Set<string>();
     for (const row of empRecords) {
       let nationalId = keyMap.nationalId ? String(row[keyMap.nationalId] || "").trim() : "";
       const name = keyMap.name ? String(row[keyMap.name] || "").trim() : "";
       
-      if (!nationalId && name) {
-        nationalId = 'TEMP_SYNC_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+      if (nationalId && (nationalId.toLowerCase() === 'رقم البطاقة' || nationalId.toLowerCase() === 'national id' || nationalId.toLowerCase() === 'nationalid' || nationalId.toLowerCase() === 'id')) {
+        continue;
       }
 
-      if (nationalId && nationalId !== 'رقم البطاقة' && nationalId !== 'National ID') {
+      const isPlaceholder = !nationalId || 
+                            ['-', 'لا يوجد', 'بدون', '0', 'none', 'n/a', 'na', 'null', 'undefined', '.', 'مكرر', 'تحت الطلب', 'مؤقت', 'مجهول'].includes(nationalId) ||
+                            nationalId.length < 3;
+
+      if (isPlaceholder || seenIds.has(nationalId)) {
+        const prefix = isPlaceholder ? 'TEMP_SYNC_' : 'DUP_SYNC_' + nationalId + '_';
+        let uniqueId = prefix + Math.random().toString(36).substr(2, 6).toUpperCase();
+        while (seenIds.has(uniqueId)) {
+          uniqueId = prefix + Math.random().toString(36).substr(2, 6).toUpperCase();
+        }
+        nationalId = uniqueId;
+      }
+
+      if (nationalId) {
+        seenIds.add(nationalId);
         const category = keyMap.category ? String(row[keyMap.category] || "").trim() : "";
         const phone = keyMap.phone ? String(row[keyMap.phone] || "").trim() : "";
         const dose1 = keyMap.dose1 ? String(row[keyMap.dose1] || "").trim() : "";

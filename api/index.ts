@@ -167,13 +167,27 @@ app.all("/api", async (req, res) => {
       
       // Deduplicate by nationalId, keeping the last occurrence
       const dedupedMap = new Map<string, any>();
+      const seenIds = new Set<string>();
       for (const emp of employeesArray) {
         let nationalId = String(emp.nationalId || "").trim();
         const name = String(emp.name || "").trim();
-        if (!nationalId && name) {
-          nationalId = 'TEMP_IMPORT_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        
+        const isPlaceholder = !nationalId || 
+                              ['-', 'لا يوجد', 'بدون', '0', 'none', 'n/a', 'na', 'null', 'undefined', '.', 'مكرر', 'تحت الطلب', 'مؤقت', 'مجهول'].includes(nationalId) ||
+                              nationalId.length < 3;
+
+        if (isPlaceholder || seenIds.has(nationalId)) {
+          const prefix = isPlaceholder ? 'TEMP_IMPORT_' : 'DUP_IMPORT_' + nationalId + '_';
+          let uniqueId = prefix + Math.random().toString(36).substr(2, 6).toUpperCase();
+          while (seenIds.has(uniqueId)) {
+            uniqueId = prefix + Math.random().toString(36).substr(2, 6).toUpperCase();
+          }
+          nationalId = uniqueId;
+          emp.nationalId = nationalId;
         }
+
         if (nationalId) {
+          seenIds.add(nationalId);
           dedupedMap.set(nationalId, emp);
         }
       }
