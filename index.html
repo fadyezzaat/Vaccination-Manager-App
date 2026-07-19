@@ -117,6 +117,10 @@ var Layout = function Layout(_ref) {
     icon: 'fa-chart-pie',
     label: 'احصائية التطعيمات'
   }, {
+    id: 'schedule',
+    icon: 'fa-calendar-alt',
+    label: 'مواعيد التطعيمات'
+  }, {
     id: 'sync_settings',
     icon: 'fa-rotate',
     label: 'المزامنة والإعدادات'
@@ -1215,6 +1219,8 @@ var App = function App() {
     api: api
   }), currentTab === 'stats' && /*#__PURE__*/React.createElement(Stats, {
     api: api
+  }), currentTab === 'schedule' && /*#__PURE__*/React.createElement(Schedule, {
+    api: api
   }), currentTab === 'sync_settings' && /*#__PURE__*/React.createElement(SyncSettings, {
     api: api
   }));
@@ -2124,6 +2130,555 @@ var Stats = function Stats(_refX) {
     ),
 
     // Signature Area for print
+    React.createElement("div", {
+      className: "hidden print:flex w-full justify-between items-center mt-16 pt-8 px-12 text-black",
+      style: { pageBreakInside: 'avoid' }
+    },
+      React.createElement("div", { className: "font-bold text-base text-right w-1/3" }, "أعده الإحصائي"),
+      React.createElement("div", { className: "font-bold text-base text-center w-1/3" }, "مسؤول مكافحة العدوى"),
+      React.createElement("div", { className: "font-bold text-base text-left w-1/3" }, "يعتمد مدير المستشفى")
+    )
+  );
+};
+
+// ==========================================
+// مكون مواعيد التطعيمات (Schedule Component)
+// ==========================================
+var Schedule = function Schedule(_refS) {
+  var api = _refS.api;
+  var _useStateS1 = useState([]),
+    _useStateS2 = _slicedToArray(_useStateS1, 2),
+    employees = _useStateS2[0],
+    setEmployees = _useStateS2[1];
+  var _useStateS3 = useState(''),
+    _useStateS4 = _slicedToArray(_useStateS3, 2),
+    selectedMonth = _useStateS4[0],
+    setSelectedMonth = _useStateS4[1];
+  var _useStateS5 = useState(''),
+    _useStateS6 = _slicedToArray(_useStateS5, 2),
+    selectedCategory = _useStateS6[0],
+    setSelectedCategory = _useStateS6[1];
+  var _useStateS7 = useState(''),
+    _useStateS8 = _slicedToArray(_useStateS7, 2),
+    searchQuery = _useStateS8[0],
+    setSearchQuery = _useStateS8[1];
+  var _useStateS9 = useState('all'),
+    _useStateS10 = _slicedToArray(_useStateS9, 2),
+    doseFilter = _useStateS10[0],
+    setDoseFilter = _useStateS10[1]; // 'all', 'dose2', 'dose3'
+  var _useStateS11 = useState('all'),
+    _useStateS12 = _slicedToArray(_useStateS11, 2),
+    statusFilter = _useStateS12[0],
+    setStatusFilter = _useStateS12[1]; // 'all', 'due', 'overdue'
+  var _useStateS13 = useState(false),
+    _useStateS14 = _slicedToArray(_useStateS13, 2),
+    isLoading = _useStateS14[0],
+    setIsLoading = _useStateS14[1];
+
+  var loadScheduleData = function loadScheduleData() {
+    setIsLoading(true);
+    api.loadEmployees().then(function (data) {
+      if (data) {
+        setEmployees(data);
+      }
+      setIsLoading(false);
+    }).catch(function (err) {
+      console.error(err);
+      setIsLoading(false);
+    });
+  };
+
+  useEffect(function () {
+    var today = new Date();
+    var monthStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
+    setSelectedMonth(monthStr);
+    setIsLoading(true);
+    api.loadEmployees().then(function (data) {
+      if (data) {
+        setEmployees(data);
+      }
+      setIsLoading(false);
+    }).catch(function (err) {
+      console.error(err);
+      setIsLoading(false);
+    });
+  }, []);
+
+  var classifyEmployee = function classifyEmployee(emp) {
+    var rawCat = (emp.category || '').trim();
+    if (!rawCat) return 'others';
+
+    var normalize = function normalize(str) {
+      if (!str) return '';
+      return str.toLowerCase()
+        .replace(/[أإآ]/g, 'ا')
+        .replace(/ة/g, 'ه')
+        .replace(/ى/g, 'ي');
+    };
+
+    var cat = normalize(rawCat);
+    
+    // الطاقم الطبي
+    if (
+      cat.includes('طبيب') || cat.includes('اطباء') || cat.includes('دكتور') || 
+      cat.includes('تمريض') || cat.includes('ممرض') || cat.includes('ممرضه') || 
+      cat.includes('صيدل') || cat.includes('اسنان') || cat.includes('علاج طبيعي') || 
+      cat.includes('فني') || cat.includes('مختبر') || cat.includes('اشعه') || 
+      cat.includes('مساعد طب') || cat.includes('بشري') || cat.includes('طاقم طبي') || 
+      cat.includes('طبي') || cat.includes('فريق طبي') || cat.includes('الفريق الطبي') || 
+      cat.includes('صحي') || cat.includes('اخصائي') || cat.includes('استشاري') || 
+      cat.includes('ممارس') || cat.includes('امتياز') || cat.includes('زماله') || 
+      cat.includes('مسعف') || cat.includes('اسعاف') || cat.includes('عدوي') || 
+      cat.includes('تحاليل') || cat.includes('مختبرات') || cat.includes('كيميائي')
+    ) {
+      return 'medical';
+    }
+    
+    // الإداريين
+    if (
+      cat.includes('ادار') || cat.includes('كاتب') || cat.includes('امن') || 
+      cat.includes('حساب') || cat.includes('شئون') || cat.includes('شؤون') || 
+      cat.includes('شؤن') || cat.includes('سجلات') || cat.includes('نظم') || 
+      cat.includes('علاقات') || cat.includes('سكرت') || cat.includes('مدير') || 
+      cat.includes('رئيس') || cat.includes('رئس') || cat.includes('مشرف') || 
+      cat.includes('مشتريات') || cat.includes('مخزن') || cat.includes('مخازن') || 
+      cat.includes('مالي') || cat.includes('قانون') || cat.includes('محام') || 
+      cat.includes('مهندس') || cat.includes('موظف') || cat.includes('احصاء') || 
+      cat.includes('مراقب') || cat.includes('امين') || cat.includes('سنترال') || 
+      cat.includes('اتصالات') || cat.includes('تليغراف') || cat.includes('تليفون') || 
+      cat.includes('خزينه') || cat.includes('تخزين') || cat.includes('مطبعه')
+    ) {
+      return 'admin';
+    }
+    
+    // عمال شركة النظافة
+    if (
+      cat.includes('عامل') || cat.includes('خدمات') || cat.includes('معاون') || 
+      cat.includes('نظاف') || cat.includes('سائق') || cat.includes('سواق') || 
+      cat.includes('حرفي') || cat.includes('صيانه') || cat.includes('مطبخ') || 
+      cat.includes('غسيل') || cat.includes('مغسله') || cat.includes('بوفيه') || 
+      cat.includes('كهربائي') || cat.includes('كهربا') || cat.includes('سباك') || 
+      cat.includes('نجار') || cat.includes('جنايني') || cat.includes('حارس') || 
+      cat.includes('مشغل')
+    ) {
+      return 'workers';
+    }
+    
+    return 'others';
+  };
+
+  var formatDate = function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    var d = dateStr.toString();
+    if (d.includes('T')) d = d.split('T')[0];
+    var parts = d.split('-');
+    if (parts.length === 3) {
+      return "".concat(parts[2], "/").concat(parts[1], "/").concat(parts[0]);
+    }
+    return d;
+  };
+
+  var scheduleItems = useMemo(function () {
+    if (!selectedMonth || !employees.length) return [];
+    var parts = selectedMonth.split('-');
+    var selYear = parseInt(parts[0], 10);
+    var selMonth = parseInt(parts[1], 10);
+
+    var items = [];
+
+    employees.forEach(function (emp) {
+      var notes = (emp.notes || '').trim();
+      if (notes.includes('تلقى جميع الجرعات خارج المستشفى') || notes.includes('رافض للتطعيم وتم عمل اقرار بالرفض')) {
+        return;
+      }
+
+      if (!emp.dose1 || emp.dose1.toString().trim() === '') return;
+
+      var d1Str = emp.dose1.toString();
+      if (d1Str.includes('T')) d1Str = d1Str.split('T')[0];
+      var d1Parts = d1Str.split('-');
+      if (d1Parts.length !== 3) return;
+
+      var y = parseInt(d1Parts[0], 10);
+      var m = parseInt(d1Parts[1], 10);
+      var d = parseInt(d1Parts[2], 10);
+
+      var dose1Date = new Date(y, m - 1, d);
+
+      var dose2Date = new Date(dose1Date.getTime());
+      dose2Date.setDate(dose2Date.getDate() + 21);
+
+      var dose3Date = new Date(dose1Date.getTime());
+      dose3Date.setMonth(dose3Date.getMonth() + 6);
+
+      var hasD2 = emp.dose2 && emp.dose2.toString().trim() !== '';
+      if (!hasD2) {
+        var d2Year = dose2Date.getFullYear();
+        var d2Month = dose2Date.getMonth() + 1;
+
+        var isDueThisMonth = (d2Year === selYear && d2Month === selMonth);
+        var isOverdue = (d2Year < selYear) || (d2Year === selYear && d2Month < selMonth);
+
+        if (isDueThisMonth || isOverdue) {
+          items.push({
+            employee: emp,
+            doseType: 'dose2',
+            doseLabel: 'الجرعة الثانية',
+            dueDate: dose2Date,
+            dueDateStr: "".concat(d2Year, "-").concat(String(d2Month).padStart(2, '0'), "-").concat(String(dose2Date.getDate()).padStart(2, '0')),
+            isOverdue: isOverdue,
+            isDueThisMonth: isDueThisMonth
+          });
+        }
+      }
+
+      var hasD3 = emp.dose3 && emp.dose3.toString().trim() !== '';
+      if (!hasD3) {
+        var d3Year = dose3Date.getFullYear();
+        var d3Month = dose3Date.getMonth() + 1;
+
+        var isDueThisMonth = (d3Year === selYear && d3Month === selMonth);
+        var isOverdue = (d3Year < selYear) || (d3Year === selYear && d3Month < selMonth);
+
+        if (isDueThisMonth || isOverdue) {
+          items.push({
+            employee: emp,
+            doseType: 'dose3',
+            doseLabel: 'الجرعة الثالثة',
+            dueDate: d3Date,
+            dueDateStr: "".concat(d3Year, "-").concat(String(d3Month).padStart(2, '0'), "-").concat(String(dose3Date.getDate()).padStart(2, '0')),
+            isOverdue: isOverdue,
+            isDueThisMonth: isDueThisMonth
+          });
+        }
+      }
+    });
+
+    var filtered = items.filter(function (item) {
+      if (searchQuery) {
+        var query = searchQuery.trim().toLowerCase();
+        var nameMatch = item.employee.name && item.employee.name.toLowerCase().includes(query);
+        var idMatch = item.employee.nationalId && item.employee.nationalId.toLowerCase().includes(query);
+        if (!nameMatch && !idMatch) return false;
+      }
+
+      if (selectedCategory) {
+        var group = classifyEmployee(item.employee);
+        if (group !== selectedCategory) return false;
+      }
+
+      if (doseFilter !== 'all') {
+        if (item.doseType !== doseFilter) return false;
+      }
+
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'due' && !item.isDueThisMonth) return false;
+        if (statusFilter === 'overdue' && !item.isOverdue) return false;
+      }
+
+      return true;
+    });
+
+    return filtered.sort(function (a, b) {
+      return a.dueDate.getTime() - b.dueDate.getTime();
+    });
+  }, [employees, selectedMonth, searchQuery, selectedCategory, doseFilter, statusFilter]);
+
+  var stats = useMemo(function () {
+    var counts = {
+      total: scheduleItems.length,
+      dueThisMonth: 0,
+      overdue: 0,
+      dose2: 0,
+      dose3: 0
+    };
+
+    scheduleItems.forEach(function (item) {
+      if (item.isDueThisMonth) counts.dueThisMonth++;
+      if (item.isOverdue) counts.overdue++;
+      if (item.doseType === 'dose2') counts.dose2++;
+      if (item.doseType === 'dose3') counts.dose3++;
+    });
+
+    return counts;
+  }, [scheduleItems]);
+
+  var handleRecordDose = function handleRecordDose(item) {
+    var emp = item.employee;
+    var doseType = item.doseType;
+    var todayStr = new Date().toISOString().split('T')[0];
+
+    Swal.fire({
+      title: "\u062A\u0633\u062C\u064A\u0644 " + item.doseLabel,
+      html: "\n        <div class=\"text-right mb-4\" dir=\"rtl\">\n          <p class=\"font-bold text-slate-800 mb-1\">\u0627\u0644\u0645\u0648\u0638\u0641: <span class=\"text-emerald-600\">" + emp.name + "</span></p>\n          <p class=\"text-sm text-slate-500 mb-2\">\u0627\u0644\u0641\u0626\u0629: " + emp.category + " | \u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u062A\u0639\u0631\u064A\u0641\u064a: " + emp.nationalId + "</p>\n          <hr class=\"my-3 border-slate-100\" />\n          <label class=\"block text-sm font-bold text-slate-700 mb-2\">\u062A\u0627\u0631\u064A\u062E \u062A\u0644\u0642\u064A \u0627\u0644\u062C\u0631\u0639\u0629:</label>\n          <input type=\"date\" id=\"swal-record-date\" class=\"w-full p-2.5 border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none font-sans\" value=\"" + todayStr + "\">\n        </div>\n      ",
+      showCancelButton: true,
+      confirmButtonText: 'حفظ وتحديث',
+      cancelButtonText: 'إلغاء',
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#ef4444',
+      preConfirm: function preConfirm() {
+        var inputVal = document.getElementById('swal-record-date').value;
+        if (!inputVal) {
+          Swal.showValidationMessage('يرجى اختيار تاريخ تلقي الجرعة');
+          return false;
+        }
+        return inputVal;
+      }
+    }).then(function (result) {
+      if (result.isConfirmed && result.value) {
+        setIsLoading(true);
+        var updatedEmp = _objectSpread(_objectSpread({}, emp), {}, _defineProperty({}, doseType, result.value));
+        api.saveEmployee(updatedEmp).then(function (res) {
+          if (res && res.status === 'success') {
+            Swal.fire({
+              icon: 'success',
+              title: 'تم التسجيل بنجاح',
+              text: "\u062A\u0645 \u062A\u062D\u062F\u064a\u062B \u062A\u0627\u0631\u064A\u062E " + item.doseLabel + " \u0644\u0644\u0645\u0648\u0638\u0641 " + emp.name,
+              timer: 2000,
+              showConfirmButton: false
+            });
+            loadScheduleData();
+          } else {
+            Swal.fire('خطأ', 'فشل حفظ تاريخ الجرعة', 'error');
+            setIsLoading(false);
+          }
+        }).catch(function (err) {
+          console.error(err);
+          Swal.fire('خطأ', 'حدث خطأ غير متوقع أثناء الحفظ', 'error');
+          setIsLoading(false);
+        });
+      }
+    });
+  };
+
+  var getSelectedMonthNameArabic = function getSelectedMonthNameArabic() {
+    if (!selectedMonth) return '';
+    var parts = selectedMonth.split('-');
+    var months = [
+      'يناير / كانون الثاني', 'فبراير / شباط', 'مارس / آذار', 'أبريل / نيسان',
+      'مايو / أيار', 'يونيو / حزيران', 'يوليو / تموز', 'أغسطس / آب',
+      'سبتمبر / أيلول', 'أكتوبر / تشرين الأول', 'نوفمبر / تشرين الثاني', 'ديسمبر / كانون الأول'
+    ];
+    var mIdx = parseInt(parts[1], 10) - 1;
+    return (months[mIdx] || '') + ' ' + parts[0];
+  };
+
+  return React.createElement("div", { className: "space-y-8 pb-8 animate-fadeIn" },
+    isLoading && React.createElement("div", {
+      className: "fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center"
+    }, React.createElement("div", {
+      className: "bg-white p-8 rounded-2xl shadow-xl flex flex-col items-center"
+    }, React.createElement("div", {
+      className: "animate-spin rounded-full h-14 w-14 border-4 border-slate-100 border-t-emerald-500 mb-4"
+    }), React.createElement("p", {
+      className: "text-slate-800 font-bold text-lg"
+    }, "\u062C\u0627\u0631\u064a \u062A\u062D\u062F\u064a\u062B \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A..."))),
+
+    React.createElement("div", { className: "bg-white rounded-3xl p-6 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] border border-slate-100 relative overflow-hidden" },
+      React.createElement("div", { className: "absolute -left-6 -top-6 w-24 h-24 bg-amber-500/5 rounded-full blur-xl" }),
+      React.createElement("div", { className: "absolute -right-6 -bottom-6 w-32 h-32 bg-emerald-500/5 rounded-full blur-xl" }),
+      React.createElement("div", { className: "flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10" },
+        React.createElement("div", null,
+          React.createElement("span", { className: "bg-amber-100 text-amber-800 text-[11px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider mb-2 inline-block shadow-sm" },
+            "\u0627\u0644\u062A\u062E\u0637\u064A\u0637 \u0648\u0627\u0644\u0645\u062A\u0627\u062E\u0631"
+          ),
+          React.createElement("h2", { className: "text-2xl font-black text-slate-800 flex items-center gap-2.5" },
+            React.createElement("div", { className: "bg-amber-100 p-2 rounded-xl text-amber-600" },
+              React.createElement("i", { className: "fas fa-calendar-alt text-xl" })
+            ),
+            "\u0645\u0648\u0627\u0639\u064A\u062F \u0627\u0644\u062A\u0637\u0639\u064A\u0645\u0627\u062A"
+          ),
+          React.createElement("p", { className: "text-slate-500 text-xs font-bold mt-1.5" },
+            "\u0639\u0631\u0636 \u0627\u0644\u0645\u0648\u0636\u0641\u064A\u0646 \u0627\u0644\u0645\u0633\u062A\u062D\u0642\u064A\u0646 \u0644\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629 \u0648\u0627\u0644\u062B\u0627\u0644\u062B\u0629 \u062A\u0644\u0642\u0627\u0626\u064A\u0627\u064B \u0637\u0628\u0642\u0627\u064B \u0644\u062A\u0627\u0631\u064A\u062E \u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649"
+          )
+        ),
+        React.createElement("div", { className: "flex items-center gap-3 w-full md:w-auto no-print" },
+          React.createElement("div", { className: "flex flex-col text-right" },
+            React.createElement("span", { className: "text-xs font-bold text-slate-400 mb-1" }, "\u0627\u062E\u062A\u064A\u0627\u0631 \u0627\u0644\u0634\u0647\u0631"),
+            React.createElement("input", {
+              type: "month",
+              value: selectedMonth,
+              onChange: function onChange(e) { return setSelectedMonth(e.target.value); },
+              className: "p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-bold text-slate-700 bg-white shadow-sm cursor-pointer"
+            })
+          ),
+          React.createElement("button", {
+            onClick: function onClick() { return window.print(); },
+            className: "self-end h-11 text-amber-700 bg-amber-50 border border-amber-100 hover:bg-amber-100 hover:text-amber-800 px-5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+          }, React.createElement("i", { className: "fas fa-print" }), "\u0637\u0628\u0627\u0639\u0629 \u0627\u0644\u0643\u0634\u0641")
+        )
+      )
+    ),
+
+    React.createElement("div", { className: "grid grid-cols-2 lg:grid-cols-5 gap-4 no-print" },
+      React.createElement("div", { className: "bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4" },
+        React.createElement("div", { className: "bg-blue-50 text-blue-600 p-3 rounded-xl" }, React.createElement("i", { className: "fas fa-users text-lg" })),
+        React.createElement("div", { className: "text-right" },
+          React.createElement("div", { className: "text-xs text-slate-400 font-bold" }, "\u0625\u062C\u0645\u0627\u0644\u064A \u0627\u0644\u0645\u0633\u062A\u062D\u0642\u0629"),
+          React.createElement("div", { className: "text-xl font-black text-slate-800" }, stats.total)
+        )
+      ),
+      React.createElement("div", { className: "bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4" },
+        React.createElement("div", { className: "bg-emerald-50 text-emerald-600 p-3 rounded-xl" }, React.createElement("i", { className: "fas fa-calendar-day text-lg" })),
+        React.createElement("div", { className: "text-right" },
+          React.createElement("div", { className: "text-xs text-slate-400 font-bold" }, "\u0645\u0633\u062A\u062D\u0642 \u0647\u0630\u0627 \u0627\u0644\u0634\u0647\u0631"),
+          React.createElement("div", { className: "text-xl font-black text-emerald-600" }, stats.dueThisMonth)
+        )
+      ),
+      React.createElement("div", { className: "bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4" },
+        React.createElement("div", { className: "bg-rose-50 text-rose-600 p-3 rounded-xl" }, React.createElement("i", { className: "fas fa-exclamation-circle text-lg" })),
+        React.createElement("div", { className: "text-right" },
+          React.createElement("div", { className: "text-xs text-slate-400 font-bold" }, "\u0645\u062A\u0623\u062E\u0631\u064A\u0645"),
+          React.createElement("div", { className: "text-xl font-black text-rose-600" }, stats.overdue)
+        )
+      ),
+      React.createElement("div", { className: "bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4" },
+        React.createElement("div", { className: "bg-purple-50 text-purple-600 p-3 rounded-xl" }, React.createElement("i", { className: "fas fa-vial text-lg" })),
+        React.createElement("div", { className: "text-right" },
+          React.createElement("div", { className: "text-xs text-slate-400 font-bold" }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629"),
+          React.createElement("div", { className: "text-xl font-black text-purple-600" }, stats.dose2)
+        )
+      ),
+      React.createElement("div", { className: "bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4" },
+        React.createElement("div", { className: "bg-amber-50 text-amber-600 p-3 rounded-xl" }, React.createElement("i", { className: "fas fa-shield-virus text-lg" })),
+        React.createElement("div", { className: "text-right" },
+          React.createElement("div", { className: "text-xs text-slate-400 font-bold" }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629"),
+          React.createElement("div", { className: "text-xl font-black text-amber-600" }, stats.dose3)
+        )
+      )
+    ),
+
+    React.createElement("div", { className: "grid grid-cols-1 md:grid-cols-4 gap-4 no-print bg-slate-100/60 p-4 rounded-2xl border border-slate-200/50" },
+      React.createElement("div", { className: "relative" },
+        React.createElement("i", { className: "fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" }),
+        React.createElement("input", {
+          type: "text",
+          value: searchQuery,
+          onChange: function onChange(e) { return setSearchQuery(e.target.value); },
+          placeholder: "\u0628\u062D\u062B \u0628\u0627\u0644\u0627\u0633\u0645 \u0623\u0648 \u0627\u0644\u0631\u0642\u0645...",
+          className: "w-full py-3 pr-11 pl-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-semibold transition-all bg-white shadow-sm"
+        })
+      ),
+      React.createElement("div", { className: "relative" },
+        React.createElement("i", { className: "fas fa-filter absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500" }),
+        React.createElement("select", {
+          value: selectedCategory,
+          onChange: function onChange(e) { return setSelectedCategory(e.target.value); },
+          className: "w-full py-3 pr-11 pl-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-bold text-slate-700 appearance-none bg-white shadow-sm cursor-pointer"
+        },
+          React.createElement("option", { value: "" }, "\u062C\u0645\u064A\u0639 \u0627\u0644\u0641\u0626\u0627\u062A"),
+          React.createElement("option", { value: "medical" }, "\u0627\u0644\u0637\u0627\u0642\u0645 \u0627\u0644\u0637\u0628\u064A"),
+          React.createElement("option", { value: "admin" }, "\u0627\u0644\u0625\u062F\u0627\u0631\u064A\u064A\u0646"),
+          React.createElement("option", { value: "workers" }, "\u0639\u0645\u0627\u0644 \u0634\u0631\u0643\u0629 \u0627\u0644\u0646\u0638\u0627\u0641\u0629"),
+          React.createElement("option", { value: "others" }, "\u0641\u0626\u0627\u062E\u0631\u0649 \u063A\u064A\u0631 \u0645\u0635\u0646\u0641\u0629")
+        )
+      ),
+      React.createElement("div", { className: "relative" },
+        React.createElement("i", { className: "fas fa-shield-virus absolute right-4 top-1/2 -translate-y-1/2 text-purple-500" }),
+        React.createElement("select", {
+          value: doseFilter,
+          onChange: function onChange(e) { return setDoseFilter(e.target.value); },
+          className: "w-full py-3 pr-11 pl-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-bold text-slate-700 appearance-none bg-white shadow-sm cursor-pointer"
+        },
+          React.createElement("option", { value: "all" }, "\u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u0627\u0644\u0645\u0633\u062E\u0642\u0629"),
+          React.createElement("option", { value: "dose2" }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629 \u0641\u0642\u0637"),
+          React.createElement("option", { value: "dose3" }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629 \u0641\u0642\u0637")
+        )
+      ),
+      React.createElement("div", { className: "relative" },
+        React.createElement("i", { className: "fas fa-exclamation-circle absolute right-4 top-1/2 -translate-y-1/2 text-rose-500" }),
+        React.createElement("select", {
+          value: statusFilter,
+          onChange: function onChange(e) { return setStatusFilter(e.target.value); },
+          className: "w-full py-3 pr-11 pl-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-bold text-slate-700 appearance-none bg-white shadow-sm cursor-pointer"
+        },
+          React.createElement("option", { value: "all" }, "\u062C\u0645\u064A\u0639 \u0627\u0644\u062D\u0627\u0644\u0627\u062A"),
+          React.createElement("option", { value: "due" }, "\u0645\u0633\u062A\u062D\u0642\u0629 \u0647\u0630\u0627 \u0627\u0644\u0634\u0647\u0631"),
+          React.createElement("option", { value: "overdue" }, "\u0645\u062A\u0623\u062E\u0631\u0629 \u0645\u0646 \u0623\u0634\u0647\u0631 \u0633\u0627\u0628\u0642\u0629")
+        )
+      )
+    ),
+
+    React.createElement("div", { className: "hidden print:block text-center space-y-2 mb-6" },
+      React.createElement("div", { className: "flex justify-between items-start text-black text-xs font-bold px-4" },
+        React.createElement("div", { className: "text-right space-y-1" },
+          React.createElement("span", { className: "block" }, "\u0645\u0633\u062A\u0634\u0641\u0649 \u0627\u0644\u0645\u0646\u064A\u0627 \u0627\u0644\u062C\u0627\u0645\u0639\u064A \u0644\u0644\u0639\u064A\u0648\u0646"),
+          React.createElement("span", { className: "block" }, "\u0648\u062D\u062F\u0629 \u0645\u0643\u0627\u0641\u062D\u0629 \u0627\u0644\u0639\u062F\u0648\u0649")
+        ),
+        React.createElement("div", { className: "text-left" },
+          React.createElement("span", { className: "block" }, "\u062A\u0627\u0631\u064A\u062E \u0627\u0644\u0637\u0628\u0627\u0639\u0629: " + formatDate(new Date().toISOString().split('T')[0]))
+        )
+      ),
+      React.createElement("h2", { className: "text-lg font-bold text-black border-b-2 border-black pb-2 mx-auto max-w-lg" },
+        "\u0643\u0634\u0641 \u0645\u0648\u0629\u0639\u064A\u062F \u0627\u0644\u062A\u0637\u0639\u064A\u0645\u0627\u062A \u0627\u0644\u0645\u0633\u062A\u062D\u0642\u0629 \u0644\u0634\u0647\u0631: " + getSelectedMonthNameArabic()
+      )
+    ),
+
+    React.createElement("div", { className: "bg-white rounded-3xl border border-slate-150 shadow-xl overflow-hidden" },
+      React.createElement("div", { className: "overflow-x-auto" },
+        React.createElement("table", { className: "w-full text-right border-collapse" },
+          React.createElement("thead", { className: "bg-slate-50 border-b border-slate-200" },
+            React.createElement("tr", null,
+              React.createElement("th", { className: "p-4 text-sm font-black text-slate-700 text-right w-[20%]" }, "\u0627\u0644\u0627\u0633\u0645"),
+              React.createElement("th", { className: "p-4 text-sm font-black text-slate-700 text-center w-[12%]" }, "\u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u062A\u0639\u0631\u064A\u0641\u064A"),
+              React.createElement("th", { className: "p-4 text-sm font-black text-slate-700 text-right w-[15%]" }, "\u0627\u0644\u0641\u0626\u0629"),
+              React.createElement("th", { className: "p-4 text-sm font-black text-slate-700 text-center w-[12%]" }, "\u062A\u0627\u0631\u064A\u062E \u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649"),
+              React.createElement("th", { className: "p-4 text-sm font-black text-slate-700 text-center w-[12%]" }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0645\u0633\u062A\u062D\u0642\u0629"),
+              React.createElement("th", { className: "p-4 text-sm font-black text-slate-700 text-center w-[12%]" }, "\u062A\u0627\u0631\u064A\u062E \u0627\u0644\u0627\u0633\u062A\u062D\u0627\u0642"),
+              React.createElement("th", { className: "p-4 text-sm font-black text-slate-700 text-center w-[10%]" }, "\u0627\u0644\u062D\u0627\u0644\u0629"),
+              React.createElement("th", { className: "p-4 text-sm font-black text-slate-700 text-center w-[12%] no-print" }, "\u0625\u062C\u0631\u0627\u0621")
+            )
+          ),
+          React.createElement("tbody", { className: "divide-y divide-slate-100" },
+            scheduleItems.length === 0 ? React.createElement("tr", null,
+              React.createElement("td", { colSpan: 8, className: "p-12 text-center text-slate-400 font-bold" },
+                React.createElement("div", { className: "flex flex-col items-center gap-3" },
+                  React.createElement("i", { className: "fas fa-calendar-check text-4xl text-slate-300" }),
+                  React.createElement("p", null, "\u0644\u0627 \u062A\u0648\u062C\u062F \u0645\u0648\u0627\u0639\u064A\u062F \u062A\u0637\u0639\u064A\u0645\u0627\u062A \u0645\u0633\u062A\u062D\u0642\u0629")
+                )
+              )
+            ) : scheduleItems.map(function (item, idx) {
+              var emp = item.employee;
+              var isOverdue = item.isOverdue;
+
+              return React.createElement("tr", { key: emp.nationalId + '-' + item.doseType, className: "hover:bg-slate-50/50 transition-colors" },
+                React.createElement("td", { className: "p-4" },
+                  React.createElement("div", { className: "font-bold text-slate-800 text-sm" }, emp.name),
+                  emp.phone && React.createElement("div", { className: "text-slate-400 text-xs mt-1 font-mono no-print" }, React.createElement("i", { className: "fas fa-phone-alt ml-1 text-[10px]" }), emp.phone)
+                ),
+                React.createElement("td", { className: "p-4 text-center font-mono text-slate-600 text-sm font-bold" }, emp.nationalId),
+                React.createElement("td", { className: "p-4 text-right font-medium text-slate-600 text-sm" }, emp.category),
+                React.createElement("td", { className: "p-4 text-center font-mono text-slate-600 text-sm" }, formatDate(emp.dose1)),
+                React.createElement("td", { className: "p-4 text-center" },
+                  React.createElement("span", { className: "inline-block bg-slate-100 text-slate-700 font-bold text-xs px-2.5 py-1 rounded-lg border border-slate-200" },
+                    item.doseLabel
+                  )
+                ),
+                React.createElement("td", { className: "p-4 text-center font-mono font-bold text-sm " + (isOverdue ? 'text-rose-600' : 'text-slate-600') },
+                  formatDate(item.dueDateStr)
+                ),
+                React.createElement("td", { className: "p-4 text-center" },
+                  isOverdue ? React.createElement("span", { className: "inline-flex items-center gap-1 bg-rose-50 text-rose-700 px-2.5 py-1 rounded-full text-xs font-bold border border-rose-100" },
+                    React.createElement("i", { className: "fas fa-exclamation-triangle" }), "\u0645\u062A\u0623\u062E\u0631"
+                  ) : React.createElement("span", { className: "inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold border border-amber-100" },
+                    React.createElement("i", { className: "fas fa-clock" }), "\u0645\u0633\u062A\u062D\u0642"
+                  )
+                ),
+                React.createElement("td", { className: "p-4 text-center no-print" },
+                  React.createElement("button", {
+                    onClick: function onClick() { return handleRecordDose(item); },
+                    className: "bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1 mx-auto cursor-pointer"
+                  },
+                    React.createElement("i", { className: "fas fa-plus-circle" }), "\u062A\u0633\u062C\u064A\u0644"
+                  )
+                )
+              );
+            })
+          )
+        )
+      )
+    ),
+
     React.createElement("div", {
       className: "hidden print:flex w-full justify-between items-center mt-16 pt-8 px-12 text-black",
       style: { pageBreakInside: 'avoid' }
