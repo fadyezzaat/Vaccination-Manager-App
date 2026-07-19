@@ -1625,21 +1625,63 @@ var Stats = function Stats(_refX) {
 
   // Classify each employee category
   var classifyEmployee = function classifyEmployee(emp) {
-    var cat = (emp.category || '').trim().toLowerCase();
-    if (!cat) return 'others';
+    var rawCat = (emp.category || '').trim();
+    if (!rawCat) return 'others';
+
+    // دالة لتبسيط الحروف العربية وتوحيدها لتجنب مشاكل الهمزات والياء والتاء المربوطة
+    var normalize = function normalize(str) {
+      if (!str) return '';
+      return str.toLowerCase()
+        .replace(/[أإآ]/g, 'ا')
+        .replace(/ة/g, 'ه')
+        .replace(/ى/g, 'ي');
+    };
+
+    var cat = normalize(rawCat);
     
     // الطاقم الطبي
-    if (cat.includes('طبيب') || cat.includes('أطباء') || cat.includes('دكتور') || cat.includes('تمريض') || cat.includes('ممرض') || cat.includes('ممرضة') || cat.includes('صيدل') || cat.includes('أسنان') || cat.includes('علاج طبيعي') || cat.includes('فني') || cat.includes('مختبر') || cat.includes('أشعة') || cat.includes('مساعد طب') || cat.includes('بشري') || cat.includes('طاقم طبي') || cat.includes('طبي')) {
+    if (
+      cat.includes('طبيب') || cat.includes('اطباء') || cat.includes('دكتور') || 
+      cat.includes('تمريض') || cat.includes('ممرض') || cat.includes('ممرضه') || 
+      cat.includes('صيدل') || cat.includes('اسنان') || cat.includes('علاج طبيعي') || 
+      cat.includes('فني') || cat.includes('مختبر') || cat.includes('اشعه') || 
+      cat.includes('مساعد طب') || cat.includes('بشري') || cat.includes('طاقم طبي') || 
+      cat.includes('طبي') || cat.includes('فريق طبي') || cat.includes('الفريق الطبي') || 
+      cat.includes('صحي') || cat.includes('اخصائي') || cat.includes('استشاري') || 
+      cat.includes('ممارس') || cat.includes('امتياز') || cat.includes('زماله') || 
+      cat.includes('مسعف') || cat.includes('اسعاف') || cat.includes('عدوي') || 
+      cat.includes('تحاليل') || cat.includes('مختبرات') || cat.includes('كيميائي')
+    ) {
       return 'medical';
     }
     
     // الإداريين
-    if (cat.includes('إدار') || cat.includes('كاتب') || cat.includes('أمن') || cat.includes('حساب') || cat.includes('شئون') || cat.includes('شؤون') || cat.includes('سجلات') || cat.includes('نظم') || cat.includes('علاقات') || cat.includes('سكرت') || cat.includes('مدير') || cat.includes('رئيس') || cat.includes('مشرف') || cat.includes('إدارة') || cat.includes('مشتريات') || cat.includes('مخزن') || cat.includes('مخازن') || cat.includes('مالي') || cat.includes('قانون') || cat.includes('محام') || cat.includes('مهندس')) {
+    if (
+      cat.includes('ادار') || cat.includes('كاتب') || cat.includes('امن') || 
+      cat.includes('حساب') || cat.includes('شئون') || cat.includes('شؤون') || 
+      cat.includes('شؤن') || cat.includes('سجلات') || cat.includes('نظم') || 
+      cat.includes('علاقات') || cat.includes('سكرت') || cat.includes('مدير') || 
+      cat.includes('رئيس') || cat.includes('رئس') || cat.includes('مشرف') || 
+      cat.includes('مشتريات') || cat.includes('مخزن') || cat.includes('مخازن') || 
+      cat.includes('مالي') || cat.includes('قانون') || cat.includes('محام') || 
+      cat.includes('مهندس') || cat.includes('موظف') || cat.includes('احصاء') || 
+      cat.includes('مراقب') || cat.includes('امين') || cat.includes('سنترال') || 
+      cat.includes('اتصالات') || cat.includes('تليغراف') || cat.includes('تليفون') || 
+      cat.includes('خزينه') || cat.includes('تخزين') || cat.includes('مطبعه')
+    ) {
       return 'admin';
     }
     
     // عمال شركة النظافة
-    if (cat.includes('عامل') || cat.includes('خدمات') || cat.includes('معاون') || cat.includes('نظاف') || cat.includes('سائق') || cat.includes('حرفي') || cat.includes('صيانة') || cat.includes('مطبخ') || cat.includes('غسيل') || cat.includes('سواق') || cat.includes('حارس') || cat.includes('مغسلة') || cat.includes('بوفيه') || cat.includes('كهربائي') || cat.includes('سباك') || cat.includes('نجار')) {
+    if (
+      cat.includes('عامل') || cat.includes('خدمات') || cat.includes('معاون') || 
+      cat.includes('نظاف') || cat.includes('سائق') || cat.includes('سواق') || 
+      cat.includes('حرفي') || cat.includes('صيانه') || cat.includes('مطبخ') || 
+      cat.includes('غسيل') || cat.includes('مغسله') || cat.includes('بوفيه') || 
+      cat.includes('كهربائي') || cat.includes('كهربا') || cat.includes('سباك') || 
+      cat.includes('نجار') || cat.includes('جنايني') || cat.includes('حارس') || 
+      cat.includes('مشغل')
+    ) {
       return 'workers';
     }
     
