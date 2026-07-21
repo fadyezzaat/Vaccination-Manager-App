@@ -467,6 +467,19 @@ var Vaccinations = function Vaccinations(_ref2) {
     }), " ", displayDose);
   };
 
+  var formatDoseDate = function formatDoseDate(dose) {
+    if (!dose || dose.toString().trim() === '') return '-';
+    var displayDose = dose.toString();
+    if (displayDose.includes('T')) {
+      displayDose = displayDose.split('T')[0];
+    }
+    var parts = displayDose.split('-');
+    if (parts.length === 3) {
+      displayDose = "".concat(parts[2], "/").concat(parts[1], "/").concat(parts[0]);
+    }
+    return displayDose;
+  };
+
   // دالة إضافة موظف جديد
   var handleAddNewWorker = /*#__PURE__*/function () {
     var _ref4 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
@@ -956,28 +969,28 @@ var Vaccinations = function Vaccinations(_ref2) {
         className: "grid grid-cols-3 gap-2 border-t border-slate-100 pt-3.5 mt-auto cursor-pointer",
         onClick: function onClick() { return toggleCard(emp.nationalId); }
       }, /*#__PURE__*/React.createElement("div", {
-        className: "flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 border border-slate-100"
+        className: "flex flex-col items-center justify-center p-1.5 rounded-xl bg-slate-50 border border-slate-100"
       }, /*#__PURE__*/React.createElement("span", {
-        className: "text-[10px] font-bold text-slate-400 mb-1"
-      }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0631"), emp.dose1 ? /*#__PURE__*/React.createElement("span", {
-        className: "text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-lg"
-      }, "\u062A\u0645") : /*#__PURE__*/React.createElement("span", {
+        className: "text-[10px] font-bold text-slate-500 mb-1"
+      }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649"), emp.dose1 ? /*#__PURE__*/React.createElement("span", {
+        className: "text-[9px] sm:text-[10px] font-mono font-black text-emerald-700 bg-emerald-50 border border-emerald-100 px-1 py-0.5 rounded-lg"
+      }, formatDoseDate(emp.dose1)) : /*#__PURE__*/React.createElement("span", {
         className: "text-slate-300 font-bold text-xs"
       }, "-")), /*#__PURE__*/React.createElement("div", {
-        className: "flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 border border-slate-100"
+        className: "flex flex-col items-center justify-center p-1.5 rounded-xl bg-slate-50 border border-slate-100"
       }, /*#__PURE__*/React.createElement("span", {
-        className: "text-[10px] font-bold text-slate-400 mb-1"
-      }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0632"), emp.dose2 ? /*#__PURE__*/React.createElement("span", {
-        className: "text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-lg"
-      }, "\u062A\u0645") : /*#__PURE__*/React.createElement("span", {
+        className: "text-[10px] font-bold text-slate-500 mb-1"
+      }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064a\u0629"), emp.dose2 ? /*#__PURE__*/React.createElement("span", {
+        className: "text-[9px] sm:text-[10px] font-mono font-black text-blue-700 bg-blue-50 border border-blue-100 px-1 py-0.5 rounded-lg"
+      }, formatDoseDate(emp.dose2)) : /*#__PURE__*/React.createElement("span", {
         className: "text-slate-300 font-bold text-xs"
       }, "-")), /*#__PURE__*/React.createElement("div", {
-        className: "flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 border border-slate-100"
+        className: "flex flex-col items-center justify-center p-1.5 rounded-xl bg-slate-50 border border-slate-100"
       }, /*#__PURE__*/React.createElement("span", {
-        className: "text-[10px] font-bold text-slate-400 mb-1"
-      }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0633"), emp.dose3 ? /*#__PURE__*/React.createElement("span", {
-        className: "text-[10px] font-black text-purple-700 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-lg"
-      }, "\u062A\u0645") : /*#__PURE__*/React.createElement("span", {
+        className: "text-[10px] font-bold text-slate-500 mb-1"
+      }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062b\u0629"), emp.dose3 ? /*#__PURE__*/React.createElement("span", {
+        className: "text-[9px] sm:text-[10px] font-mono font-black text-purple-700 bg-purple-50 border border-purple-100 px-1 py-0.5 rounded-lg"
+      }, formatDoseDate(emp.dose3)) : /*#__PURE__*/React.createElement("span", {
         className: "text-slate-300 font-bold text-xs"
       }, "-"))), /*#__PURE__*/React.createElement("div", {
         className: "text-center mt-3 border-t border-slate-100 pt-2 cursor-pointer",
@@ -1001,20 +1014,6 @@ var Vaccinations = function Vaccinations(_ref2) {
       }, emp.notes), /*#__PURE__*/React.createElement("span", null, " :\u0627ل\u0645\u0644\u0627\u062D\u0638\u0627\u062A"), /*#__PURE__*/React.createElement("i", {
         className: "fas fa-info-circle text-slate-400 w-4 text-center mt-0.5"
       })), /*#__PURE__*/React.createElement("div", {
-        className: "bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2 text-xs"
-      }, /*#__PURE__*/React.createElement("div", {
-        className: "flex justify-between items-center"
-      }, renderDoseBadge(emp.dose1), /*#__PURE__*/React.createElement("span", {
-        className: "font-bold text-slate-500"
-      }, ":\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649")), /*#__PURE__*/React.createElement("div", {
-        className: "flex justify-between items-center"
-      }, renderDoseBadge(emp.dose2), /*#__PURE__*/React.createElement("span", {
-        className: "font-bold text-slate-500"
-      }, ":\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629")), /*#__PURE__*/React.createElement("div", {
-        className: "flex justify-between items-center"
-      }, renderDoseBadge(emp.dose3), /*#__PURE__*/React.createElement("span", {
-        className: "font-bold text-slate-500"
-      }, ":\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629"))), /*#__PURE__*/React.createElement("div", {
         className: "flex gap-2.5 pt-1"
       }, /*#__PURE__*/React.createElement("button", {
         onClick: function onClick() { return handleEditEmployee(emp); },
