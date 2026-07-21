@@ -218,6 +218,132 @@ var Vaccinations = function Vaccinations(_ref2) {
     _useState14 = _slicedToArray(_useState13, 2),
     printOnlySelected = _useState14[0],
     setPrintOnlySelected = _useState14[1];
+  var _useStateExpanded = useState({}),
+    _useStateExpanded2 = _slicedToArray(_useStateExpanded, 2),
+    expandedCards = _useStateExpanded2[0],
+    setExpandedCards = _useStateExpanded2[1];
+
+  var toggleCard = function toggleCard(id) {
+    setExpandedCards(function (prev) {
+      var next = Object.assign({}, prev);
+      next[id] = !next[id];
+      return next;
+    });
+  };
+
+  var handleEditEmployee = function (emp) {
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _calleeEdit() {
+      var _yield$Swal$fire2, formValues, success;
+      return _regenerator().w(function (_context3) {
+        while (1) switch (_context3.n) {
+          case 0:
+            _context3.n = 1;
+            return Swal.fire({
+              title: "إضافة بيانات التطعيم",
+              html: "<div class=\"text-right px-2\" dir=\"rtl\">\n                                                                <div class=\"mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200\">\n                                                                    <span class=\"text-xs text-slate-500 font-bold block mb-1\">\u0627\u0644\u0627\u0633\u0645</span>\n                                                                    <span class=\"font-bold text-slate-800\">" + emp.name + "</span>\n                                                                </div>\n                                                                <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0631\u0642\u0645 \u0627\u0644\u0628\u0637\u0627\u0642\u0629 (14 \u0631\u0642\u0645)</label>\n                                                                <input id=\"swal-id-edit\" type=\"text\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + (emp.nationalId || '') + "\" maxlength=\"14\" minlength=\"14\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0631\u0642\u0645 \u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646</label>\n                                                                <input id=\"swal-phone-edit\" type=\"text\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + (emp.phone || '') + "\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649</label>\n                                                                <input id=\"swal-d1\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + (emp.dose1 ? emp.dose1.includes('T') ? emp.dose1.split('T')[0] : emp.dose1.includes('/') ? emp.dose1.split('/').reverse().join('-') : emp.dose1 : '') + "\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629</label>\n                                                                <input id=\"swal-d2\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + (emp.dose2 ? emp.dose2.includes('T') ? emp.dose2.split('T')[0] : emp.dose2.includes('/') ? emp.dose2.split('/').reverse().join('-') : emp.dose2 : '') + "\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629</label>\n                                                                <input id=\"swal-d3\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + (emp.dose3 ? emp.dose3.includes('T') ? emp.dose3.split('T')[0] : emp.dose3.includes('/') ? emp.dose3.split('/').reverse().join('-') : emp.dose3 : '') + "\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0645\u0644\u0627\u062D\u0638\u0627\u062A</label>\n                                                                <input id=\"swal-notes\" list=\"notes-list-edit\" class=\"swal2-input w-full max-w-full m-0 text-sm font-bold\" value=\"" + (emp.notes || '') + "\" placeholder=\"\u0625\u0636\u0627\u0641\u0629 \u0645\u0644\u0627\u062D\u0638\u0629...\">\n                                                                <datalist id=\"notes-list-edit\">\n                                                                    <option value=\"\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649\">\n                                                                    <option value=\"\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636\">\n                                                                </datalist>\n                                                                <div class=\"flex flex-col gap-2 mt-3 select-none\">\n                                                                    <button type=\"button\" onclick=\"document.getElementById('swal-notes').value='\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649'\" class=\"text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg text-right font-bold transition-colors border border-slate-200\">\n                                                                        + \u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649\n                                                                    </button>\n                                                                    <button type=\"button\" onclick=\"document.getElementById('swal-notes').value='\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636'\" class=\"text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg text-right font-bold transition-colors border border-slate-200\">\n                                                                        + \u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636\n                                                                    </button>\n                                                                </div>\n                                                            </div>",
+              focusConfirm: false,
+              showCancelButton: true,
+              confirmButtonText: 'حفظ الإضافة',
+              cancelButtonText: 'إلغاء',
+              confirmButtonColor: '#10b981',
+              preConfirm: function preConfirm() {
+                var getIsoDose = function getIsoDose(id) {
+                  var val = document.getElementById(id).value.trim();
+                  if (!val) return '';
+                  if (val === 'تم') return val;
+                  try {
+                    var d = new Date(val);
+                    if (!isNaN(d.getTime())) {
+                      var y = d.getFullYear();
+                      var m = String(d.getMonth() + 1).padStart(2, '0');
+                      var day = String(d.getDate()).padStart(2, '0');
+                      return "".concat(day, "/").concat(m, "/").concat(y);
+                    }
+                  } catch (e) {}
+                  return val;
+                };
+                var idEdit = document.getElementById('swal-id-edit').value.trim();
+                if (idEdit && idEdit.length < 3) {
+                  Swal.showValidationMessage('الرقم التعريفي يجب أن يكون 3 خانات على الأقل');
+                  return false;
+                }
+                return {
+                  nationalIdEdit: idEdit,
+                  phoneEdit: document.getElementById('swal-phone-edit').value.trim(),
+                  dose1: getIsoDose('swal-d1'),
+                  dose2: getIsoDose('swal-d2'),
+                  dose3: getIsoDose('swal-d3'),
+                  notes: document.getElementById('swal-notes').value
+                };
+              }
+            });
+          case 1:
+            _yield$Swal$fire2 = _context3.v;
+            formValues = _yield$Swal$fire2.value;
+            if (!formValues) {
+              _context3.n = 3;
+              break;
+            }
+            _context3.n = 2;
+            return api.saveEmployee({
+              category: emp.category,
+              name: emp.name,
+              nationalId: formValues.nationalIdEdit || emp.nationalId,
+              oldNationalId: emp.nationalId,
+              phone: formValues.phoneEdit,
+              dose1: formValues.dose1,
+              dose2: formValues.dose2,
+              dose3: formValues.dose3,
+              notes: formValues.notes
+            });
+          case 2:
+            success = _context3.v;
+            if (success) {
+              loadEmployeesData();
+            }
+          case 3:
+            return _context3.a(2);
+        }
+      }, _calleeEdit);
+    }))();
+  };
+
+  var handleDeleteEmployee = function (emp) {
+    return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _calleeDelete() {
+      var confirm, success;
+      return _regenerator().w(function (_context4) {
+        while (1) switch (_context4.n) {
+          case 0:
+            _context4.n = 1;
+            return Swal.fire({
+              title: 'هل أنت متأكد؟',
+              text: "هل تريد بالفعل حذف بيانات الموظف " + emp.name + "؟",
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#ef4444',
+              cancelButtonColor: '#cbd5e1',
+              confirmButtonText: 'نعم، احذف',
+              cancelButtonText: 'إلغاء'
+            });
+          case 1:
+            confirm = _context4.v;
+            if (!confirm.isConfirmed) {
+              _context4.n = 3;
+              break;
+            }
+            _context4.n = 2;
+            return api.deleteEmployee(emp.nationalId);
+          case 2:
+            success = _context4.v;
+            if (success) {
+              loadEmployeesData();
+            }
+          case 3:
+            return _context4.a(2);
+        }
+      }, _calleeDelete);
+    }))();
+  };
   useEffect(function () {
     loadEmployeesData();
   }, []);
@@ -608,8 +734,11 @@ var Vaccinations = function Vaccinations(_ref2) {
       cat = _ref6[0],
       emps = _ref6[1];
     return /*#__PURE__*/React.createElement("div", {
-      key: cat,
-      className: "overflow-x-auto print:overflow-visible print:w-full print:text-center"
+      key: cat + "-group-wrapper",
+      className: "w-full"
+    }, /*#__PURE__*/React.createElement("div", {
+      key: cat + "-print-table",
+      className: "hidden print:block overflow-x-auto print:overflow-visible print:w-full print:text-center"
     }, /*#__PURE__*/React.createElement("div", {
       className: "bg-slate-100 p-4 border-b border-slate-200 print:bg-white print:border-b print:border-slate-800 print:mb-2 print:p-1 print:pb-1 text-center"
     }, /*#__PURE__*/React.createElement("h3", {
@@ -650,27 +779,25 @@ var Vaccinations = function Vaccinations(_ref2) {
         }
       }
     })), /*#__PURE__*/React.createElement("th", {
-      className: "p-5 font-bold text-slate-500 text-sm"
+      className: "p-5 font-bold text-slate-500 text-sm text-right print:text-black print:p-1"
     }, "\u0627\u0644\u0627\u0633\u0645"), /*#__PURE__*/React.createElement("th", {
-      className: "p-5 font-bold text-slate-500 text-sm"
-    }, "\u0631\u0642\u0645 \u0627\u0644\u0628\u0637\u0627\u0642\u0629"), /*#__PURE__*/React.createElement("th", {
-      className: "p-5 font-bold text-slate-500 text-sm"
-    }, "\u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646"), /*#__PURE__*/React.createElement("th", {
-      className: "p-5 font-bold text-slate-500 text-sm"
-    }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649"), /*#__PURE__*/React.createElement("th", {
-      className: "p-5 font-bold text-slate-500 text-sm"
-    }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629"), /*#__PURE__*/React.createElement("th", {
-      className: "p-5 font-bold text-slate-500 text-sm"
-    }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629"), /*#__PURE__*/React.createElement("th", {
-      className: "p-5 font-bold text-slate-500 text-sm"
-    }, "\u0645\u0644\u0627\u062D\u0638\u0627\u062A"), /*#__PURE__*/React.createElement("th", {
-      className: "p-5 font-bold text-slate-500 text-sm text-center no-print"
-    }, "\u0625\u062C\u0631\u0627\u0621"))), /*#__PURE__*/React.createElement("tbody", null, emps.map(function (emp, idx) {
+      className: "p-5 font-bold text-slate-500 text-sm text-center print:text-black print:p-1"
+    }, "\u0631\u0642\u0645 \u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646"), /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm text-center print:text-black print:p-1"
+    }, "\u0627\u0644\u062C\u0631ع\u0629 \u0627\u0644\u0623\u0648ل\u0649"), /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm text-center print:text-black print:p-1"
+    }, "\u0627\u0644\u062C\u0631ع\u0629 \u0627\u0644\u062Bان\u064A\u0629"), /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm text-center print:text-black print:p-1"
+    }, "\u0627\u0644\u062C\u0631ع\u0629 \u0627\u0644\u062Bال\u062B\u0629"), /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm text-right print:text-black print:p-1"
+    }, "\u0645\u0644\u0627ح\u0638\u0627\u062A"), /*#__PURE__*/React.createElement("th", {
+      className: "p-5 font-bold text-slate-500 text-sm text-center no-print w-24"
+    }, "\u0627\u0644عمل\u064A\u0627\u062A"))), /*#__PURE__*/React.createElement("tbody", null, emps.map(function (emp) {
       return /*#__PURE__*/React.createElement("tr", {
-        key: emp.nationalId + idx,
-        className: "border-b border-slate-100 hover:bg-slate-50 transition-colors group"
+        key: emp.nationalId,
+        className: "border-b border-slate-100 hover:bg-slate-50 transition-colors print:hover:bg-transparent"
       }, /*#__PURE__*/React.createElement("td", {
-        className: "p-5 text-center no-print w-12"
+        className: "p-5 text-center no-print"
       }, /*#__PURE__*/React.createElement("input", {
         type: "checkbox",
         className: "w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer",
@@ -690,143 +817,217 @@ var Vaccinations = function Vaccinations(_ref2) {
           }
         }
       })), /*#__PURE__*/React.createElement("td", {
-        className: "p-5 font-bold text-slate-800 text-sm"
-      }, emp.name), /*#__PURE__*/React.createElement("td", {
-        className: "p-5 text-slate-600 font-semibold text-sm"
-      }, emp.nationalId), /*#__PURE__*/React.createElement("td", {
-        className: "p-5 text-slate-500 font-medium text-sm",
-        dir: "ltr"
+        className: "p-5 print:p-1 text-right"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "flex flex-col"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "font-bold text-slate-800 print:text-black print:text-xs"
+      }, emp.name), /*#__PURE__*/React.createElement("span", {
+        className: "text-xs text-slate-400 font-mono mt-0.5 print:text-[8px]"
+      }, emp.nationalId))), /*#__PURE__*/React.createElement("td", {
+        className: "p-5 print:p-1 text-center font-mono font-bold text-slate-600 print:text-black print:text-[10px]"
       }, emp.phone || '-'), /*#__PURE__*/React.createElement("td", {
-        className: "p-5"
+        className: "p-5 print:p-1 text-center print:text-center"
       }, renderDoseBadge(emp.dose1)), /*#__PURE__*/React.createElement("td", {
-        className: "p-5"
+        className: "p-5 print:p-1 text-center print:text-center"
       }, renderDoseBadge(emp.dose2)), /*#__PURE__*/React.createElement("td", {
-        className: "p-5"
+        className: "p-5 print:p-1 text-center print:text-center"
       }, renderDoseBadge(emp.dose3)), /*#__PURE__*/React.createElement("td", {
-        className: "p-5 text-slate-500 text-sm max-w-[150px] truncate print:whitespace-pre-wrap print:overflow-visible print:w-auto print:max-w-none break-words",
-        title: emp.notes
+        className: "p-5 print:p-1 text-right text-slate-600 print:text-black print:text-xs font-semibold whitespace-pre-wrap max-w-xs"
       }, emp.notes || '-'), /*#__PURE__*/React.createElement("td", {
         className: "p-5 text-center no-print"
       }, /*#__PURE__*/React.createElement("div", {
-        className: "flex items-center justify-center gap-2"
+        className: "flex justify-center gap-2"
       }, /*#__PURE__*/React.createElement("button", {
-        onClick: /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
-          var _yield$Swal$fire2, formValues, success;
-          return _regenerator().w(function (_context3) {
-            while (1) switch (_context3.n) {
-              case 0:
-                _context3.n = 1;
-                return Swal.fire({
-                  title: "\u0625\u0636\u0627\u0641\u0629 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u062A\u0637\u0639\u064A\u0645",
-                  html: "<div class=\"text-right px-2\" dir=\"rtl\">\n                                                                    <div class=\"mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200\">\n                                                                        <span class=\"text-xs text-slate-500 font-bold block mb-1\">\u0627\u0644\u0627\u0633\u0645</span>\n                                                                        <span class=\"font-bold text-slate-800\">".concat(emp.name, "</span>\n                                                                    </div>\n                                                                    <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0631\u0642\u0645 \u0627\u0644\u0628\u0637\u0627\u0642\u0629 (14 \u0631\u0642\u0645)</label>\n                                                                    <input id=\"swal-id-edit\" type=\"text\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"").concat(emp.nationalId || '', "\" maxlength=\"14\" minlength=\"14\">\n                                                                    \n                                                                    <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0631\u0642\u0645 \u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646</label>\n                                                                    <input id=\"swal-phone-edit\" type=\"text\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"").concat(emp.phone || '', "\">\n                                                                    \n                                                                    <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649</label>\n                                                                    <input id=\"swal-d1\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"").concat(emp.dose1 ? emp.dose1.includes('T') ? emp.dose1.split('T')[0] : emp.dose1.includes('/') ? emp.dose1.split('/').reverse().join('-') : emp.dose1 : '', "\">\n                                                                    \n                                                                    <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629</label>\n                                                                    <input id=\"swal-d2\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"").concat(emp.dose2 ? emp.dose2.includes('T') ? emp.dose2.split('T')[0] : emp.dose2.includes('/') ? emp.dose2.split('/').reverse().join('-') : emp.dose2 : '', "\">\n                                                                    \n                                                                    <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629</label>\n                                                                    <input id=\"swal-d3\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"").concat(emp.dose3 ? emp.dose3.includes('T') ? emp.dose3.split('T')[0] : emp.dose3.includes('/') ? emp.dose3.split('/').reverse().join('-') : emp.dose3 : '', "\">\n                                                                    \n                                                                    <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0645\u0644\u0627\u062D\u0638\u0627\u062A</label>\n                                                                    <input id=\"swal-notes\" list=\"notes-list-edit\" class=\"swal2-input w-full max-w-full m-0 text-sm font-bold\" value=\"").concat(emp.notes || '', "\" placeholder=\"\u0625\u0636\u0627\u0641\u0629 \u0645\u0644\u0627\u062D\u0638\u0629...\">\n                                                                    <datalist id=\"notes-list-edit\">\n                                                                        <option value=\"\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649\">\n                                                                        <option value=\"\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636\">\n                                                                    </datalist>\n                                                                    <div class=\"flex flex-col gap-2 mt-3 select-none\">\n                                                                        <button type=\"button\" onclick=\"document.getElementById('swal-notes').value='\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649'\" class=\"text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg text-right font-bold transition-colors border border-slate-200\">\n                                                                            + \u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649\n                                                                        </button>\n                                                                        <button type=\"button\" onclick=\"document.getElementById('swal-notes').value='\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636'\" class=\"text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg text-right font-bold transition-colors border border-slate-200\">\n                                                                            + \u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636\n                                                                        </button>\n                                                                    </div>\n                                                                </div>"),
-                  focusConfirm: false,
-                  showCancelButton: true,
-                  confirmButtonText: 'حفظ الإضافة',
-                  cancelButtonText: 'إلغاء',
-                  confirmButtonColor: '#10b981',
-                  preConfirm: function preConfirm() {
-                    var getIsoDose = function getIsoDose(id) {
-                      var val = document.getElementById(id).value.trim();
-                      if (!val) return '';
-                      if (val === 'تم') return val;
-                      try {
-                        var d = new Date(val);
-                        if (!isNaN(d.getTime())) {
-                          var y = d.getFullYear();
-                          var m = String(d.getMonth() + 1).padStart(2, '0');
-                          var day = String(d.getDate()).padStart(2, '0');
-                          return "".concat(day, "/").concat(m, "/").concat(y);
-                        }
-                      } catch (e) {}
-                      return val;
-                    };
-                    var idEdit = document.getElementById('swal-id-edit').value.trim();
-                    if (idEdit && idEdit.length < 3) {
-                      Swal.showValidationMessage('الرقم التعريفي يجب أن يكون 3 خانات على الأقل');
-                      return false;
-                    }
-                    return {
-                      nationalIdEdit: idEdit,
-                      phoneEdit: document.getElementById('swal-phone-edit').value.trim(),
-                      dose1: getIsoDose('swal-d1'),
-                      dose2: getIsoDose('swal-d2'),
-                      dose3: getIsoDose('swal-d3'),
-                      notes: document.getElementById('swal-notes').value
-                    };
-                  }
-                });
-              case 1:
-                _yield$Swal$fire2 = _context3.v;
-                formValues = _yield$Swal$fire2.value;
-                if (!formValues) {
-                  _context3.n = 3;
-                  break;
-                }
-                _context3.n = 2;
-                return api.saveEmployee({
-                  category: emp.category,
-                  name: emp.name,
-                  nationalId: formValues.nationalIdEdit || emp.nationalId,
-                  oldNationalId: emp.nationalId,
-                  phone: formValues.phoneEdit,
-                  dose1: formValues.dose1,
-                  dose2: formValues.dose2,
-                  dose3: formValues.dose3,
-                  notes: formValues.notes
-                });
-              case 2:
-                success = _context3.v;
-                if (success) {
-                  loadEmployeesData();
-                }
-              case 3:
-                return _context3.a(2);
-            }
-          }, _callee3);
-        })),
+        onClick: function onClick() { return handleEditEmployee(emp); },
         className: "text-emerald-600 border border-emerald-200 bg-emerald-50 hover:bg-emerald-600 hover:text-white px-3 py-1.5 rounded-xl font-bold text-sm transition-all focus:outline-none shadow-sm flex items-center justify-center gap-1.5"
       }, /*#__PURE__*/React.createElement("i", {
         className: "fas fa-edit"
       }), " \u0625\u0636\u0627\u0641\u0629"), /*#__PURE__*/React.createElement("button", {
-        onClick: /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee4() {
-          var confirm, success;
-          return _regenerator().w(function (_context4) {
-            while (1) switch (_context4.n) {
-              case 0:
-                _context4.n = 1;
-                return Swal.fire({
-                  title: 'هل أنت متأكد؟',
-                  text: "\u0647\u0644 \u062A\u0631\u064A\u062F \u0628\u0627\u0644\u0641\u0639\u0644 \u062D\u0630\u0641 \u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0645\u0648\u0638\u0641 ".concat(emp.name, "\u061F"),
-                  icon: 'warning',
-                  showCancelButton: true,
-                  confirmButtonColor: '#ef4444',
-                  cancelButtonColor: '#cbd5e1',
-                  confirmButtonText: 'نعم، احذف',
-                  cancelButtonText: 'إلغاء'
-                });
-              case 1:
-                confirm = _context4.v;
-                if (!confirm.isConfirmed) {
-                  _context4.n = 3;
-                  break;
-                }
-                _context4.n = 2;
-                return api.deleteEmployee(emp.nationalId);
-              case 2:
-                success = _context4.v;
-                if (success) {
-                  loadEmployeesData();
-                }
-              case 3:
-                return _context4.a(2);
-            }
-          }, _callee4);
-        })),
+        onClick: function onClick() { return handleDeleteEmployee(emp); },
         className: "text-rose-600 border border-rose-200 bg-rose-50 hover:bg-rose-600 hover:text-white px-3 py-1.5 rounded-xl font-bold text-sm transition-all focus:outline-none shadow-sm flex items-center justify-center gap-1.5"
       }, /*#__PURE__*/React.createElement("i", {
         className: "fas fa-trash-alt"
       }), " \u062D\u0630\u0641"))));
-    }))));
+    })))), /*#__PURE__*/React.createElement("div", {
+      key: cat + "-cards-view",
+      className: "no-print block mb-8"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "bg-emerald-50/50 p-4 border border-emerald-100 rounded-2xl mb-4 flex justify-between items-center"
+    }, /*#__PURE__*/React.createElement("h3", {
+      className: "text-lg font-black text-emerald-800 text-right"
+    }, cat, " (", emps.length, ")"), /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-2"
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "checkbox",
+      className: "w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer",
+      checked: emps.length > 0 && emps.every(function (emp) {
+        return selectedIds.includes(emp.nationalId);
+      }),
+      onChange: function onChange(e) {
+        var checked = e.target.checked;
+        var groupIds = emps.map(function (emp) {
+          return emp.nationalId;
+        });
+        if (checked) {
+          setSelectedIds(function (prev) {
+            var newIds = _toConsumableArray(prev);
+            groupIds.forEach(function (id) {
+              if (!newIds.includes(id)) {
+                newIds.push(id);
+              }
+            });
+            return newIds;
+          });
+        } else {
+          setSelectedIds(function (prev) {
+            return prev.filter(function (id) {
+              return !groupIds.includes(id);
+            });
+          });
+        }
+      }
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "text-xs font-bold text-slate-500 cursor-pointer select-none",
+      onClick: function onClick() {
+        var allSelected = emps.every(function (emp) {
+          return selectedIds.includes(emp.nationalId);
+        });
+        var groupIds = emps.map(function (emp) {
+          return emp.nationalId;
+        });
+        if (!allSelected) {
+          setSelectedIds(function (prev) {
+            var newIds = _toConsumableArray(prev);
+            groupIds.forEach(function (id) {
+              if (!newIds.includes(id)) {
+                newIds.push(id);
+              }
+            });
+            return newIds;
+          });
+        } else {
+          setSelectedIds(function (prev) {
+            return prev.filter(function (id) {
+              return !groupIds.includes(id);
+            });
+          });
+        }
+      }
+    }, "\u062A\u062D\u062F\u064A\u062F \u0627\u0644\u0643\u0644"))), /*#__PURE__*/React.createElement("div", {
+      className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+    }, emps.map(function (emp, eidx) {
+      var isExpanded = expandedCards[emp.nationalId];
+      return /*#__PURE__*/React.createElement("div", {
+        key: emp.nationalId + "-card-" + eidx,
+        className: "bg-white border " + (isExpanded ? "border-emerald-500 ring-2 ring-emerald-100" : "border-slate-200/80 hover:border-slate-300 hover:shadow-md") + " rounded-2xl p-5 transition-all duration-200 flex flex-col relative text-right"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "flex justify-between items-start gap-3 mb-3"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "flex items-start gap-2.5 flex-1 cursor-pointer",
+        onClick: function onClick() { return toggleCard(emp.nationalId); }
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 p-2.5 rounded-xl transition-colors flex-shrink-0 flex items-center justify-center w-10 h-10"
+      }, /*#__PURE__*/React.createElement("i", {
+        className: "fas fa-user text-sm"
+      })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h4", {
+        className: "font-bold text-slate-800 text-sm leading-snug hover:text-emerald-700 transition-colors text-right"
+      }, emp.name), /*#__PURE__*/React.createElement("p", {
+        className: "text-xs font-mono text-slate-400 mt-1 font-semibold text-right"
+      }, emp.nationalId))), /*#__PURE__*/React.createElement("input", {
+        type: "checkbox",
+        className: "w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer mt-1 flex-shrink-0",
+        checked: selectedIds.includes(emp.nationalId),
+        onChange: function onChange(e) {
+          var checked = e.target.checked;
+          if (checked) {
+            setSelectedIds(function (prev) {
+              return [].concat(_toConsumableArray(prev), [emp.nationalId]);
+            });
+          } else {
+            setSelectedIds(function (prev) {
+              return prev.filter(function (id) {
+                return id !== emp.nationalId;
+              });
+            });
+          }
+        }
+      })), /*#__PURE__*/React.createElement("div", {
+        className: "grid grid-cols-3 gap-2 border-t border-slate-100 pt-3.5 mt-auto cursor-pointer",
+        onClick: function onClick() { return toggleCard(emp.nationalId); }
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 border border-slate-100"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "text-[10px] font-bold text-slate-400 mb-1"
+      }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0631"), emp.dose1 ? /*#__PURE__*/React.createElement("span", {
+        className: "text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-lg"
+      }, "\u062A\u0645") : /*#__PURE__*/React.createElement("span", {
+        className: "text-slate-300 font-bold text-xs"
+      }, "-")), /*#__PURE__*/React.createElement("div", {
+        className: "flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 border border-slate-100"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "text-[10px] font-bold text-slate-400 mb-1"
+      }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0632"), emp.dose2 ? /*#__PURE__*/React.createElement("span", {
+        className: "text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-lg"
+      }, "\u062A\u0645") : /*#__PURE__*/React.createElement("span", {
+        className: "text-slate-300 font-bold text-xs"
+      }, "-")), /*#__PURE__*/React.createElement("div", {
+        className: "flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50 border border-slate-100"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "text-[10px] font-bold text-slate-400 mb-1"
+      }, "\u0627\u0644\u062C\u0631\u0639\u0629 \u0633"), emp.dose3 ? /*#__PURE__*/React.createElement("span", {
+        className: "text-[10px] font-black text-purple-700 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-lg"
+      }, "\u062A\u0645") : /*#__PURE__*/React.createElement("span", {
+        className: "text-slate-300 font-bold text-xs"
+      }, "-"))), /*#__PURE__*/React.createElement("div", {
+        className: "text-center mt-3 border-t border-slate-100 pt-2 cursor-pointer",
+        onClick: function onClick() { return toggleCard(emp.nationalId); }
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "text-[11px] font-bold text-slate-400 hover:text-emerald-600 transition-colors inline-flex items-center gap-1"
+      }, isExpanded ? "\u0625\u0631\u062C\u0627\u0639 \u0627\u0644\u062A\u0641\u0627\u0635\u064A\u0644" : "\u0639\u0631\u0636 \u0627\u0644\u062A\u0641\u0627\u0635\u064A\u0644 \u0648ا\u0644\u0639\u0645\u0644\u064A\u0627\u062A", /*#__PURE__*/React.createElement("i", {
+        className: "fas " + (isExpanded ? "fa-chevron-up" : "fa-chevron-down") + " text-[8px]"
+      }))), isExpanded && /*#__PURE__*/React.createElement("div", {
+        className: "mt-4 pt-4 border-t border-dashed border-slate-200 text-right space-y-3.5 animate-fadeIn"
+      }, emp.phone && /*#__PURE__*/React.createElement("div", {
+        className: "flex items-center gap-2 text-slate-600 text-xs font-semibold justify-end"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "font-mono font-bold text-slate-700"
+      }, emp.phone), /*#__PURE__*/React.createElement("span", null, " :\u0631\u0642\u0645 \u0627\u0644\u062A\u0644\u064Aف\u0648\u0646"), /*#__PURE__*/React.createElement("i", {
+        className: "fas fa-phone text-slate-400 w-4 text-center"
+      })), emp.notes && /*#__PURE__*/React.createElement("div", {
+        className: "flex items-start gap-2 text-slate-600 text-xs font-semibold justify-end"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "text-slate-700 flex-1 break-words leading-relaxed font-bold text-right"
+      }, emp.notes), /*#__PURE__*/React.createElement("span", null, " :\u0627ل\u0645\u0644\u0627\u062D\u0638\u0627\u062A"), /*#__PURE__*/React.createElement("i", {
+        className: "fas fa-info-circle text-slate-400 w-4 text-center mt-0.5"
+      })), /*#__PURE__*/React.createElement("div", {
+        className: "bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-2 text-xs"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "flex justify-between items-center"
+      }, renderDoseBadge(emp.dose1), /*#__PURE__*/React.createElement("span", {
+        className: "font-bold text-slate-500"
+      }, ":\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649")), /*#__PURE__*/React.createElement("div", {
+        className: "flex justify-between items-center"
+      }, renderDoseBadge(emp.dose2), /*#__PURE__*/React.createElement("span", {
+        className: "font-bold text-slate-500"
+      }, ":\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629")), /*#__PURE__*/React.createElement("div", {
+        className: "flex justify-between items-center"
+      }, renderDoseBadge(emp.dose3), /*#__PURE__*/React.createElement("span", {
+        className: "font-bold text-slate-500"
+      }, ":\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629"))), /*#__PURE__*/React.createElement("div", {
+        className: "flex gap-2.5 pt-1"
+      }, /*#__PURE__*/React.createElement("button", {
+        onClick: function onClick() { return handleEditEmployee(emp); },
+        className: "flex-1 text-emerald-600 border border-emerald-200 bg-emerald-50 hover:bg-emerald-600 hover:text-white px-3 py-2 rounded-xl font-bold text-xs transition-all focus:outline-none shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+      }, /*#__PURE__*/React.createElement("i", {
+        className: "fas fa-edit"
+      }), "\u0625\u0636\u0627\u0641\u0629 / \u062A\u0639\u062F\u064A\u0645"), /*#__PURE__*/React.createElement("button", {
+        onClick: function onClick() { return handleDeleteEmployee(emp); },
+        className: "flex-1 text-rose-600 border border-rose-200 bg-rose-50 hover:bg-rose-600 hover:text-white px-3 py-2 rounded-xl font-bold text-xs transition-all focus:outline-none shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+      }, /*#__PURE__*/React.createElement("i", {
+        className: "fas fa-trash-alt"
+      }), "\u062D\u0630\u0641 \u0627\u0644\u0645\u0648\u0638\u0641"))))
+    }))))
   }), Object.keys(groupedEmployees).length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "hidden print:flex w-full justify-between items-center mt-12 pt-4 px-12 text-black",
     style: {
