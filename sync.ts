@@ -1,6 +1,42 @@
 import { db } from "./src/lib/db.js";
 import { parse } from "csv-parse/sync";
 
+export function normalizeDoseDate(val: any): string {
+  if (!val || typeof val !== 'string') return val ? String(val).trim() : '';
+  const trimmed = val.trim();
+  if (!trimmed || trimmed === 'تم') return trimmed;
+  let d = trimmed;
+  if (d.includes('T')) d = d.split('T')[0];
+  const clean = d.replace(/\//g, '-');
+  const p = clean.split('-');
+  if (p.length === 3) {
+    let day: string, m: string, y: string;
+    if (p[0].length === 4) {
+      // YYYY-MM-DD
+      y = p[0];
+      m = p[1];
+      day = p[2];
+    } else if (p[2].length === 4) {
+      const n1 = parseInt(p[0], 10);
+      const n2 = parseInt(p[1], 10);
+      y = p[2];
+      if (n2 > 12) {
+        // MM-DD-YYYY
+        m = p[0];
+        day = p[1];
+      } else {
+        // DD-MM-YYYY
+        day = p[0];
+        m = p[1];
+      }
+    } else {
+      return trimmed;
+    }
+    return `${String(day).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+  }
+  return trimmed;
+}
+
 export function extractSheetId(input: string): string {
   if (!input) return "";
   const trimmed = input.trim();
@@ -145,9 +181,9 @@ export async function syncGoogleSheets(customSheetId?: string) {
         seenIds.add(nationalId);
         const category = keyMap.category ? String(row[keyMap.category] || "").trim() : "";
         const phone = keyMap.phone ? String(row[keyMap.phone] || "").trim() : "";
-        const dose1 = keyMap.dose1 ? String(row[keyMap.dose1] || "").trim() : "";
-        const dose2 = keyMap.dose2 ? String(row[keyMap.dose2] || "").trim() : "";
-        const dose3 = keyMap.dose3 ? String(row[keyMap.dose3] || "").trim() : "";
+        const dose1 = normalizeDoseDate(keyMap.dose1 ? String(row[keyMap.dose1] || "").trim() : "");
+        const dose2 = normalizeDoseDate(keyMap.dose2 ? String(row[keyMap.dose2] || "").trim() : "");
+        const dose3 = normalizeDoseDate(keyMap.dose3 ? String(row[keyMap.dose3] || "").trim() : "");
         const notes = keyMap.notes ? String(row[keyMap.notes] || "").trim() : "";
         
         dedupedMap.set(nationalId, { name, category, phone, dose1, dose2, dose3, notes });

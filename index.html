@@ -98,6 +98,72 @@ var _React = React,
   useEffect = _React.useEffect,
   useMemo = _React.useMemo;
 
+var normalizeDoseToDdMmYyyy = function normalizeDoseToDdMmYyyy(val) {
+  if (!val || typeof val !== 'string') return val ? String(val).trim() : '';
+  var trimmed = val.trim();
+  if (!trimmed || trimmed === 'تم') return trimmed;
+  var d = trimmed;
+  if (d.includes('T')) d = d.split('T')[0];
+  var clean = d.replace(/\//g, '-');
+  var p = clean.split('-');
+  if (p.length === 3) {
+    var day, m, y;
+    if (p[0].length === 4) {
+      y = p[0];
+      m = p[1];
+      day = p[2];
+    } else if (p[2].length === 4) {
+      var n1 = parseInt(p[0], 10);
+      var n2 = parseInt(p[1], 10);
+      y = p[2];
+      if (n2 > 12) {
+        m = p[0];
+        day = p[1];
+      } else {
+        day = p[0];
+        m = p[1];
+      }
+    } else {
+      return trimmed;
+    }
+    return "".concat(String(day).padStart(2, '0'), "/").concat(String(m).padStart(2, '0'), "/").concat(y);
+  }
+  return trimmed;
+};
+
+var toInputDateValue = function toInputDateValue(val) {
+  if (!val || typeof val !== 'string') return '';
+  var trimmed = val.trim();
+  if (!trimmed || trimmed === 'تم') return '';
+  var d = trimmed;
+  if (d.includes('T')) d = d.split('T')[0];
+  var clean = d.replace(/\//g, '-');
+  var p = clean.split('-');
+  if (p.length === 3) {
+    var day, m, y;
+    if (p[0].length === 4) {
+      y = p[0];
+      m = p[1];
+      day = p[2];
+    } else if (p[2].length === 4) {
+      var n1 = parseInt(p[0], 10);
+      var n2 = parseInt(p[1], 10);
+      y = p[2];
+      if (n2 > 12) {
+        m = p[0];
+        day = p[1];
+      } else {
+        day = p[0];
+        m = p[1];
+      }
+    } else {
+      return '';
+    }
+    return "".concat(y, "-").concat(String(m).padStart(2, '0'), "-").concat(String(day).padStart(2, '0'));
+  }
+  return '';
+};
+
 // رابط Google Apps Script الخاص بك
 var GOOGLE_SCRIPT_URL = '/api';
 
@@ -240,7 +306,7 @@ var Vaccinations = function Vaccinations(_ref2) {
             _context3.n = 1;
             return Swal.fire({
               title: "إضافة بيانات التطعيم",
-              html: "<div class=\"text-right px-2\" dir=\"rtl\">\n                                                                <div class=\"mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200\">\n                                                                    <span class=\"text-xs text-slate-500 font-bold block mb-1\">\u0627\u0644\u0627\u0633\u0645</span>\n                                                                    <span class=\"font-bold text-slate-800\">" + emp.name + "</span>\n                                                                </div>\n                                                                <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0631\u0642\u0645 \u0627\u0644\u0628\u0637\u0627\u0642\u0629 (14 \u0631\u0642\u0645)</label>\n                                                                <input id=\"swal-id-edit\" type=\"text\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + (emp.nationalId || '') + "\" maxlength=\"14\" minlength=\"14\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0631\u0642\u0645 \u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646</label>\n                                                                <input id=\"swal-phone-edit\" type=\"text\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + (emp.phone || '') + "\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649</label>\n                                                                <input id=\"swal-d1\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + (emp.dose1 ? emp.dose1.includes('T') ? emp.dose1.split('T')[0] : emp.dose1.includes('/') ? emp.dose1.split('/').reverse().join('-') : emp.dose1 : '') + "\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629</label>\n                                                                <input id=\"swal-d2\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + (emp.dose2 ? emp.dose2.includes('T') ? emp.dose2.split('T')[0] : emp.dose2.includes('/') ? emp.dose2.split('/').reverse().join('-') : emp.dose2 : '') + "\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629</label>\n                                                                <input id=\"swal-d3\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + (emp.dose3 ? emp.dose3.includes('T') ? emp.dose3.split('T')[0] : emp.dose3.includes('/') ? emp.dose3.split('/').reverse().join('-') : emp.dose3 : '') + "\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0645\u0644\u0627\u062D\u0638\u0627\u062A</label>\n                                                                <input id=\"swal-notes\" list=\"notes-list-edit\" class=\"swal2-input w-full max-w-full m-0 text-sm font-bold\" value=\"" + (emp.notes || '') + "\" placeholder=\"\u0625\u0636\u0627\u0641\u0629 \u0645\u0644\u0627\u062D\u0638\u0629...\">\n                                                                <datalist id=\"notes-list-edit\">\n                                                                    <option value=\"\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649\">\n                                                                    <option value=\"\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636\">\n                                                                </datalist>\n                                                                <div class=\"flex flex-col gap-2 mt-3 select-none\">\n                                                                    <button type=\"button\" onclick=\"document.getElementById('swal-notes').value='\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649'\" class=\"text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg text-right font-bold transition-colors border border-slate-200\">\n                                                                        + \u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649\n                                                                    </button>\n                                                                    <button type=\"button\" onclick=\"document.getElementById('swal-notes').value='\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636'\" class=\"text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg text-right font-bold transition-colors border border-slate-200\">\n                                                                        + \u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636\n                                                                    </button>\n                                                                </div>\n                                                            </div>",
+              html: "<div class=\"text-right px-2\" dir=\"rtl\">\n                                                                <div class=\"mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200\">\n                                                                    <span class=\"text-xs text-slate-500 font-bold block mb-1\">\u0627\u0644\u0627\u0633\u0645</span>\n                                                                    <span class=\"font-bold text-slate-800\">" + emp.name + "</span>\n                                                                </div>\n                                                                <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0631\u0642\u0645 \u0627\u0644\u0628\u0637\u0627\u0642\u0629 (14 \u0631\u0642\u0645)</label>\n                                                                <input id=\"swal-id-edit\" type=\"text\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + (emp.nationalId || '') + "\" maxlength=\"14\" minlength=\"14\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0631\u0642\u0645 \u0627\u0644\u062A\u0644\u064A\u0641\u0648\u0646</label>\n                                                                <input id=\"swal-phone-edit\" type=\"text\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + (emp.phone || '') + "\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u0623\u0648\u0644\u0649</label>\n                                                                <input id=\"swal-d1\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + toInputDateValue(emp.dose1) + "\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629</label>\n                                                                <input id=\"swal-d2\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + toInputDateValue(emp.dose2) + "\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-emerald-700 mb-1\">\u0627\u0644\u062C\u0631\u0639\u0629 \u0627\u0644\u062B\u0627\u0644\u062B\u0629</label>\n                                                                <input id=\"swal-d3\" type=\"date\" class=\"swal2-input w-full max-w-full m-0 mb-4 text-sm font-bold\" value=\"" + toInputDateValue(emp.dose3) + "\">\n                                                                \n                                                                <label class=\"block text-sm font-bold text-slate-700 mb-1\">\u0645\u0644\u0627\u062D\u0638\u0627\u062A</label>\n                                                                <input id=\"swal-notes\" list=\"notes-list-edit\" class=\"swal2-input w-full max-w-full m-0 text-sm font-bold\" value=\"" + (emp.notes || '') + "\" placeholder=\"\u0625\u0636\u0627\u0641\u0629 \u0645\u0644\u0627\u062D\u0638\u0629...\">\n                                                                <datalist id=\"notes-list-edit\">\n                                                                    <option value=\"\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649\">\n                                                                    <option value=\"\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636\">\n                                                                </datalist>\n                                                                <div class=\"flex flex-col gap-2 mt-3 select-none\">\n                                                                    <button type=\"button\" onclick=\"document.getElementById('swal-notes').value='\u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649'\" class=\"text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg text-right font-bold transition-colors border border-slate-200\">\n                                                                        + \u062A\u0644\u0642\u0649 \u062C\u0645\u064A\u0639 \u0627\u0644\u062C\u0631\u0639\u0627\u062A \u062E\u0627\u0631\u062C \u0627\u0644\u0645\u0633\u062A\u0634\u0641\u0649\n                                                                    </button>\n                                                                    <button type=\"button\" onclick=\"document.getElementById('swal-notes').value='\u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636'\" class=\"text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-lg text-right font-bold transition-colors border border-slate-200\">\n                                                                        + \u0631\u0627\u0641\u0636 \u0644\u0644\u062A\u0637\u0639\u064A\u0645 \u0648\u062A\u0645 \u0639\u0645\u0644 \u0627\u0642\u0631\u0627\u0631 \u0628\u0627\u0644\u0631\u0641\u0636\n                                                                    </button>\n                                                                </div>\n                                                            </div>",
               focusConfirm: false,
               showCancelButton: true,
               confirmButtonText: 'حفظ الإضافة',
@@ -249,18 +315,7 @@ var Vaccinations = function Vaccinations(_ref2) {
               preConfirm: function preConfirm() {
                 var getIsoDose = function getIsoDose(id) {
                   var val = document.getElementById(id).value.trim();
-                  if (!val) return '';
-                  if (val === 'تم') return val;
-                  try {
-                    var d = new Date(val);
-                    if (!isNaN(d.getTime())) {
-                      var y = d.getFullYear();
-                      var m = String(d.getMonth() + 1).padStart(2, '0');
-                      var day = String(d.getDate()).padStart(2, '0');
-                      return "".concat(day, "/").concat(m, "/").concat(y);
-                    }
-                  } catch (e) {}
-                  return val;
+                  return normalizeDoseToDdMmYyyy(val);
                 };
                 var idEdit = document.getElementById('swal-id-edit').value.trim();
                 if (idEdit && idEdit.length < 3) {
@@ -452,14 +507,7 @@ var Vaccinations = function Vaccinations(_ref2) {
     if (!dose || dose.toString().trim() === '') return /*#__PURE__*/React.createElement("span", {
       className: "text-slate-300 font-bold"
     }, "-");
-    var displayDose = dose.toString();
-    if (displayDose.includes('T')) {
-      displayDose = displayDose.split('T')[0];
-    }
-    var parts = displayDose.split('-');
-    if (parts.length === 3) {
-      displayDose = "".concat(parts[2], "/").concat(parts[1], "/").concat(parts[0]);
-    }
+    var displayDose = normalizeDoseToDdMmYyyy(dose.toString());
     return /*#__PURE__*/React.createElement("span", {
       className: "inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-bold text-xs border border-emerald-100 print:bg-transparent print:border-none print:px-0 print:py-0 print:text-black"
     }, /*#__PURE__*/React.createElement("i", {
@@ -469,15 +517,7 @@ var Vaccinations = function Vaccinations(_ref2) {
 
   var formatDoseDate = function formatDoseDate(dose) {
     if (!dose || dose.toString().trim() === '') return '-';
-    var displayDose = dose.toString();
-    if (displayDose.includes('T')) {
-      displayDose = displayDose.split('T')[0];
-    }
-    var parts = displayDose.split('-');
-    if (parts.length === 3) {
-      displayDose = "".concat(parts[2], "/").concat(parts[1], "/").concat(parts[0]);
-    }
-    return displayDose;
+    return normalizeDoseToDdMmYyyy(dose.toString()) || '-';
   };
 
   // دالة إضافة موظف جديد
@@ -503,18 +543,7 @@ var Vaccinations = function Vaccinations(_ref2) {
               preConfirm: function preConfirm() {
                 var getIsoDose = function getIsoDose(id) {
                   var val = document.getElementById(id).value.trim();
-                  if (!val) return '';
-                  if (val === 'تم') return val;
-                  try {
-                    var d = new Date(val);
-                    if (!isNaN(d.getTime())) {
-                      var y = d.getFullYear();
-                      var m = String(d.getMonth() + 1).padStart(2, '0');
-                      var day = String(d.getDate()).padStart(2, '0');
-                      return "".concat(day, "/").concat(m, "/").concat(y);
-                    }
-                  } catch (e) {}
-                  return val;
+                  return normalizeDoseToDdMmYyyy(val);
                 };
                 var category = document.getElementById('swal-cat').value.trim();
                 var name = document.getElementById('swal-name').value.trim();
@@ -1637,9 +1666,9 @@ var SyncSettings = function SyncSettings() {
           name: name,
           category: cleaned[colMap.category] || '',
           phone: cleaned[colMap.phone] || '',
-          dose1: cleaned[colMap.dose1] || '',
-          dose2: cleaned[colMap.dose2] || '',
-          dose3: cleaned[colMap.dose3] || '',
+          dose1: normalizeDoseToDdMmYyyy(cleaned[colMap.dose1] || ''),
+          dose2: normalizeDoseToDdMmYyyy(cleaned[colMap.dose2] || ''),
+          dose3: normalizeDoseToDdMmYyyy(cleaned[colMap.dose3] || ''),
           notes: cleaned[colMap.notes] || ''
         });
       }
@@ -2469,13 +2498,7 @@ var Schedule = function Schedule(_refS) {
 
   var formatDate = function formatDate(dateStr) {
     if (!dateStr) return '-';
-    var d = dateStr.toString();
-    if (d.includes('T')) d = d.split('T')[0];
-    var parts = d.split('-');
-    if (parts.length === 3) {
-      return "".concat(parts[2], "/").concat(parts[1], "/").concat(parts[0]);
-    }
-    return d;
+    return normalizeDoseToDdMmYyyy(dateStr.toString()) || '-';
   };
 
   var scheduleItems = useMemo(function () {
@@ -2647,7 +2670,7 @@ var Schedule = function Schedule(_refS) {
           Swal.showValidationMessage('يرجى اختيار تاريخ تلقي الجرعة');
           return false;
         }
-        return inputVal;
+        return normalizeDoseToDdMmYyyy(inputVal);
       }
     }).then(function (result) {
       if (result.isConfirmed && result.value) {
