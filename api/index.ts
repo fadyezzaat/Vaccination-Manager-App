@@ -3,7 +3,7 @@ import express from "express";
 import path from "path";
 import { db, createTables, createInfectionTable } from "../src/lib/db.js";
 import { parse } from "csv-parse/sync";
-import { syncGoogleSheets, extractSheetId, normalizeDoseDate } from "../sync.js";
+import { syncGoogleSheets, extractSheetId } from "../sync.js";
 
 export const app = express();
 
@@ -82,19 +82,10 @@ app.all("/api", async (req, res) => {
     } 
     else if (action === "getAllEmployees") {
       const result = await db.execute("SELECT * FROM vaccine_employees");
-      const normalizedRows = result.rows.map((row: any) => ({
-        ...row,
-        dose1: normalizeDoseDate(row.dose1),
-        dose2: normalizeDoseDate(row.dose2),
-        dose3: normalizeDoseDate(row.dose3)
-      }));
-      res.json({ status: "success", employees: normalizedRows });
+      res.json({ status: "success", employees: result.rows });
     }
     else if (action === "saveEmployee" || action === "saveEmployeeData") {
       const { nationalId, oldNationalId, name, category, phone, dose1, dose2, dose3, notes } = params;
-      const cleanD1 = normalizeDoseDate(dose1);
-      const cleanD2 = normalizeDoseDate(dose2);
-      const cleanD3 = normalizeDoseDate(dose3);
       
       const targetId = oldNationalId || nationalId;
       
@@ -106,12 +97,12 @@ app.all("/api", async (req, res) => {
       if (existing.rows.length > 0) {
         await db.execute({
           sql: "UPDATE vaccine_employees SET nationalId=?, name=?, category=?, phone=?, dose1=?, dose2=?, dose3=?, notes=? WHERE nationalId=?",
-          args: [nationalId, name || "", category || "", phone || "", cleanD1 || "", cleanD2 || "", cleanD3 || "", notes || "", targetId]
+          args: [nationalId, name || "", category || "", phone || "", dose1 || "", dose2 || "", dose3 || "", notes || "", targetId]
         });
       } else {
         await db.execute({
           sql: "INSERT INTO vaccine_employees (nationalId, name, category, phone, dose1, dose2, dose3, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-          args: [nationalId, name || "", category || "", phone || "", cleanD1 || "", cleanD2 || "", cleanD3 || "", notes || ""]
+          args: [nationalId, name || "", category || "", phone || "", dose1 || "", dose2 || "", dose3 || "", notes || ""]
         });
       }
       res.json({ status: "success", message: "Employee saved" });
@@ -124,9 +115,6 @@ app.all("/api", async (req, res) => {
       }
 
       for (const emp of employeesArray) {
-        const cleanD1 = normalizeDoseDate(emp.dose1);
-        const cleanD2 = normalizeDoseDate(emp.dose2);
-        const cleanD3 = normalizeDoseDate(emp.dose3);
         const existing = await db.execute({
           sql: "SELECT * FROM vaccine_employees WHERE nationalId = ?",
           args: [emp.nationalId]
@@ -134,12 +122,12 @@ app.all("/api", async (req, res) => {
         if (existing.rows.length > 0) {
            await db.execute({
             sql: "UPDATE vaccine_employees SET name=?, category=?, phone=?, dose1=?, dose2=?, dose3=?, notes=? WHERE nationalId=?",
-            args: [emp.name || "", emp.category || "", emp.phone || "", cleanD1 || "", cleanD2 || "", cleanD3 || "", emp.notes || "", emp.nationalId]
+            args: [emp.name || "", emp.category || "", emp.phone || "", emp.dose1 || "", emp.dose2 || "", emp.dose3 || "", emp.notes || "", emp.nationalId]
           });
         } else {
           await db.execute({
             sql: "INSERT INTO vaccine_employees (nationalId, name, category, phone, dose1, dose2, dose3, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            args: [emp.nationalId, emp.name || "", emp.category || "", emp.phone || "", cleanD1 || "", cleanD2 || "", cleanD3 || "", emp.notes || ""]
+            args: [emp.nationalId, emp.name || "", emp.category || "", emp.phone || "", emp.dose1 || "", emp.dose2 || "", emp.dose3 || "", emp.notes || ""]
           });
         }
       }
@@ -213,9 +201,9 @@ app.all("/api", async (req, res) => {
             String(emp.name || "").trim(),
             String(emp.category || "").trim(),
             String(emp.phone || "").trim(),
-            normalizeDoseDate(emp.dose1),
-            normalizeDoseDate(emp.dose2),
-            normalizeDoseDate(emp.dose3),
+            String(emp.dose1 || "").trim(),
+            String(emp.dose2 || "").trim(),
+            String(emp.dose3 || "").trim(),
             String(emp.notes || "").trim()
           ]
         });
