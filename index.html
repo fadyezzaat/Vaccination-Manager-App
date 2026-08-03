@@ -17,6 +17,9 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+    <!-- SheetJS (XLSX) for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
     <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -480,6 +483,64 @@ var Vaccinations = function Vaccinations(_ref2) {
     return displayDose;
   };
 
+  // دالة تصدير البيانات إلى شيت إكسيل
+  var handleExportToExcel = function handleExportToExcel() {
+    if (!window.XLSX) {
+      Swal.fire('خطأ', 'مكتبة إكسيل غير متوفرة حالياً، يرجى إعادة تحميل الصفحة', 'error');
+      return;
+    }
+    if (!filteredEmployees || filteredEmployees.length === 0) {
+      Swal.fire('تنبيه', 'لا توجد بيانات موظفين للتصدير حالياً', 'warning');
+      return;
+    }
+
+    var excelData = filteredEmployees.map(function(emp, index) {
+      return {
+        'م': index + 1,
+        'الاسم': emp.name || '',
+        'الرقم القومي / التعريفي': emp.nationalId || '',
+        'الفئة': emp.category || '',
+        'رقم التليفون': emp.phone || '',
+        'الجرعة الأولى': formatDoseDate(emp.dose1),
+        'الجرعة الثانية': formatDoseDate(emp.dose2),
+        'الجرعة الثالثة': formatDoseDate(emp.dose3),
+        'الملاحظات': emp.notes || ''
+      };
+    });
+
+    var worksheet = XLSX.utils.json_to_sheet(excelData);
+    worksheet['!cols'] = [
+      { wch: 6 },  // م
+      { wch: 28 }, // الاسم
+      { wch: 20 }, // الرقم القومي
+      { wch: 22 }, // الفئة
+      { wch: 16 }, // رقم التليفون
+      { wch: 15 }, // الجرعة الأولى
+      { wch: 15 }, // الجرعة الثانية
+      { wch: 15 }, // الجرعة الثالثة
+      { wch: 32 }  // الملاحظات
+    ];
+
+    var workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "قائمة التطعيمات");
+
+    if (!workbook.Workbook) workbook.Workbook = {};
+    if (!workbook.Workbook.Views) workbook.Workbook.Views = [{}];
+    workbook.Workbook.Views[0].RTL = true;
+
+    var catName = selectedCategory === 'all' ? 'جميع_الفئات' : selectedCategory;
+    var fileName = "كشف_تطعيمات_" + catName + "_" + new Date().toISOString().split('T')[0] + ".xlsx";
+    XLSX.writeFile(workbook, fileName);
+
+    Swal.fire({
+      title: 'تم التصدير بنجاح!',
+      text: 'تم تصدير ' + filteredEmployees.length + ' موظف إلى شيت إكسيل: ' + fileName,
+      icon: 'success',
+      timer: 2500,
+      showConfirmButton: false
+    });
+  };
+
   // دالة إضافة موظف جديد
   var handleAddNewWorker = /*#__PURE__*/function () {
     var _ref4 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
@@ -595,6 +656,11 @@ var Vaccinations = function Vaccinations(_ref2) {
   }, /*#__PURE__*/React.createElement("i", {
     className: "fas fa-user-plus"
   }), " \u0625\u0636\u0627\u0641\u0629 \u0645\u0648\u0638\u0641"), /*#__PURE__*/React.createElement("button", {
+    onClick: handleExportToExcel,
+    className: "flex-1 md:flex-none text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 px-5 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-file-excel text-emerald-600 text-base"
+  }), " \u062A\u0635\u062F\u064A\u0631 Excel"), /*#__PURE__*/React.createElement("button", {
     onClick: function onClick() {
       return window.print();
     },
@@ -1969,6 +2035,108 @@ var Stats = function Stats(_refX) {
     return 'فئات أخرى غير مصنفة';
   };
 
+  var handleExportStatsToExcel = function handleExportStatsToExcel() {
+    if (!window.XLSX) {
+      Swal.fire('خطأ', 'مكتبة إكسيل غير متوفرة حالياً، يرجى إعادة تحميل الصفحة', 'error');
+      return;
+    }
+
+    var excelData = [
+      {
+        'الفئة': 'الفئة الطبية',
+        'إجمالي المستهدف': statsMedical.total,
+        'الجرعة الأولى': statsMedical.dose1,
+        'نسبة الجرعة الأولى': statsMedical.pdose1 + '%',
+        'الجرعة الثانية': statsMedical.dose2,
+        'نسبة الجرعة الثانية': statsMedical.pdose2 + '%',
+        'الجرعة الثالثة': statsMedical.dose3,
+        'نسبة الجرعة الثالثة': statsMedical.pdose3 + '%',
+        'الرافضين': statsMedical.refused,
+        'نسبة الرافضين': statsMedical.prefused + '%'
+      },
+      {
+        'الفئة': 'الإداريين',
+        'إجمالي المستهدف': statsAdmin.total,
+        'الجرعة الأولى': statsAdmin.dose1,
+        'نسبة الجرعة الأولى': statsAdmin.pdose1 + '%',
+        'الجرعة الثانية': statsAdmin.dose2,
+        'نسبة الجرعة الثانية': statsAdmin.pdose2 + '%',
+        'الجرعة الثالثة': statsAdmin.dose3,
+        'نسبة الجرعة الثالثة': statsAdmin.pdose3 + '%',
+        'الرافضين': statsAdmin.refused,
+        'نسبة الرافضين': statsAdmin.prefused + '%'
+      },
+      {
+        'الفئة': 'عمال شركة النظافة',
+        'إجمالي المستهدف': statsWorkers.total,
+        'الجرعة الأولى': statsWorkers.dose1,
+        'نسبة الجرعة الأولى': statsWorkers.pdose1 + '%',
+        'الجرعة الثانية': statsWorkers.dose2,
+        'نسبة الجرعة الثانية': statsWorkers.pdose2 + '%',
+        'الجرعة الثالثة': statsWorkers.dose3,
+        'نسبة الجرعة الثالثة': statsWorkers.pdose3 + '%',
+        'الرافضين': statsWorkers.refused,
+        'نسبة الرافضين': statsWorkers.prefused + '%'
+      },
+      {
+        'الفئة': 'فئات أخرى غير مصنفة',
+        'إجمالي المستهدف': statsOthers.total,
+        'الجرعة الأولى': statsOthers.dose1,
+        'نسبة الجرعة الأولى': statsOthers.pdose1 + '%',
+        'الجرعة الثانية': statsOthers.dose2,
+        'نسبة الجرعة الثانية': statsOthers.pdose2 + '%',
+        'الجرعة الثالثة': statsOthers.dose3,
+        'نسبة الجرعة الثالثة': statsOthers.pdose3 + '%',
+        'الرافضين': statsOthers.refused,
+        'نسبة الرافضين': statsOthers.prefused + '%'
+      },
+      {
+        'الفئة': 'الإجمالي العام',
+        'إجمالي المستهدف': statsTotal.total,
+        'الجرعة الأولى': statsTotal.dose1,
+        'نسبة الجرعة الأولى': statsTotal.pdose1 + '%',
+        'الجرعة الثانية': statsTotal.dose2,
+        'نسبة الجرعة الثانية': statsTotal.pdose2 + '%',
+        'الجرعة الثالثة': statsTotal.dose3,
+        'نسبة الجرعة الثالثة': statsTotal.pdose3 + '%',
+        'الرافضين': statsTotal.refused,
+        'نسبة الرافضين': statsTotal.prefused + '%'
+      }
+    ];
+
+    var worksheet = XLSX.utils.json_to_sheet(excelData);
+    worksheet['!cols'] = [
+      { wch: 22 }, // الفئة
+      { wch: 16 }, // إجمالي المستهدف
+      { wch: 15 }, // الجرعة الأولى
+      { wch: 18 }, // نسبة الجرعة الأولى
+      { wch: 15 }, // الجرعة الثانية
+      { wch: 18 }, // نسبة الجرعة الثانية
+      { wch: 15 }, // الجرعة الثالثة
+      { wch: 18 }, // نسبة الجرعة الثالثة
+      { wch: 12 }, // الرافضين
+      { wch: 15 }  // نسبة الرافضين
+    ];
+
+    var workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "إحصائية التطعيمات");
+
+    if (!workbook.Workbook) workbook.Workbook = {};
+    if (!workbook.Workbook.Views) workbook.Workbook.Views = [{}];
+    workbook.Workbook.Views[0].RTL = true;
+
+    var fileName = "إحصائية_التطعيمات_" + new Date().toISOString().split('T')[0] + ".xlsx";
+    XLSX.writeFile(workbook, fileName);
+
+    Swal.fire({
+      title: 'تم التصدير بنجاح!',
+      text: 'تم حفظ شيت الإكسيل باسم: ' + fileName,
+      icon: 'success',
+      timer: 2500,
+      showConfirmButton: false
+    });
+  };
+
   return React.createElement("div", { className: "space-y-6" },
     // Page Header
     React.createElement("div", { className: "flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm no-print" },
@@ -1981,12 +2149,21 @@ var Stats = function Stats(_refX) {
           React.createElement("p", { className: "text-slate-500 text-xs font-semibold mt-1" }, "متابعة نسب التغطية والمستهدف والجرعات للفئات المختلفة")
         )
       ),
-      React.createElement("button", {
-        onClick: handlePrint,
-        className: "bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 cursor-pointer shadow-sm self-stretch sm:self-auto justify-center"
-      },
-        React.createElement("i", { className: "fas fa-print" }),
-        "طباعة الإحصائية الرسمية"
+      React.createElement("div", { className: "flex flex-wrap gap-2 w-full sm:w-auto" },
+        React.createElement("button", {
+          onClick: handleExportStatsToExcel,
+          className: "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 cursor-pointer shadow-sm flex-1 sm:flex-none justify-center"
+        },
+          React.createElement("i", { className: "fas fa-file-excel text-emerald-600 text-base" }),
+          "تصدير Excel"
+        ),
+        React.createElement("button", {
+          onClick: handlePrint,
+          className: "bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 cursor-pointer shadow-sm flex-1 sm:flex-none justify-center"
+        },
+          React.createElement("i", { className: "fas fa-print" }),
+          "طباعة الإحصائية الرسمية"
+        )
       )
     ),
 
@@ -2628,6 +2805,63 @@ var Schedule = function Schedule(_refS) {
     return counts;
   }, [scheduleItems]);
 
+  var handleExportScheduleToExcel = function handleExportScheduleToExcel() {
+    if (!window.XLSX) {
+      Swal.fire('خطأ', 'مكتبة إكسيل غير متوفرة حالياً، يرجى إعادة تحميل الصفحة', 'error');
+      return;
+    }
+    if (!filteredItems || filteredItems.length === 0) {
+      Swal.fire('تنبيه', 'لا توجد مواعيد تطعيم مستحقة لتصديرها لهذا الشهر', 'warning');
+      return;
+    }
+
+    var excelData = filteredItems.map(function(item, index) {
+      var emp = item.employee;
+      return {
+        'م': index + 1,
+        'الاسم': emp.name || '',
+        'الرقم التعريفي / القومي': emp.nationalId || '',
+        'الفئة': emp.category || '',
+        'تاريخ الجرعة الأولى': emp.dose1 ? formatDoseDate(emp.dose1) : '-',
+        'الجرعة المستحقة': item.doseLabel || '',
+        'تاريخ الاستحقاق': item.dueDateStr ? formatDoseDate(item.dueDateStr) : 'غير مسجل (لم يتلقَ الأولى)',
+        'الحالة': item.isOverdue ? 'متأخر' : 'مستحق هذا الشهر',
+        'رقم التليفون': emp.phone || ''
+      };
+    });
+
+    var worksheet = XLSX.utils.json_to_sheet(excelData);
+    worksheet['!cols'] = [
+      { wch: 6 },  // م
+      { wch: 28 }, // الاسم
+      { wch: 20 }, // الرقم القومي
+      { wch: 22 }, // الفئة
+      { wch: 18 }, // تاريخ الجرعة الأولى
+      { wch: 16 }, // الجرعة المستحقة
+      { wch: 20 }, // تاريخ الاستحقاق
+      { wch: 16 }, // الحالة
+      { wch: 16 }  // رقم التليفون
+    ];
+
+    var workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "مواعيد التطعيمات");
+
+    if (!workbook.Workbook) workbook.Workbook = {};
+    if (!workbook.Workbook.Views) workbook.Workbook.Views = [{}];
+    workbook.Workbook.Views[0].RTL = true;
+
+    var fileName = "جدول_المواعيد_المستحقة_" + selectedMonth + ".xlsx";
+    XLSX.writeFile(workbook, fileName);
+
+    Swal.fire({
+      title: 'تم التصدير بنجاح!',
+      text: 'تم حفظ شيت الإكسيل باسم: ' + fileName,
+      icon: 'success',
+      timer: 2500,
+      showConfirmButton: false
+    });
+  };
+
   var handleRecordDose = function handleRecordDose(item) {
     var emp = item.employee;
     var doseType = item.doseType;
@@ -2727,6 +2961,10 @@ var Schedule = function Schedule(_refS) {
               className: "p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-bold text-slate-700 bg-white shadow-sm cursor-pointer"
             })
           ),
+          React.createElement("button", {
+            onClick: handleExportScheduleToExcel,
+            className: "self-end h-11 text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 px-5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+          }, React.createElement("i", { className: "fas fa-file-excel text-emerald-600 text-base" }), "\u062A\u0635\u062F\u064A\u0631 Excel"),
           React.createElement("button", {
             onClick: function onClick() { return window.print(); },
             className: "self-end h-11 text-amber-700 bg-amber-50 border border-amber-100 hover:bg-amber-100 hover:text-amber-800 px-5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer"
